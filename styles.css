@@ -69,8 +69,7 @@ body::before {
     left: 0;
     width: 100%;
     height: 100%;
-    background:
-        /* Main grid lines */
+    background: 
         repeating-linear-gradient(
             0deg,
             transparent,
@@ -84,35 +83,10 @@ body::before {
             transparent 2px,
             rgba(0, 255, 136, 0.03) 2px,
             rgba(0, 255, 136, 0.03) 4px
-        ),
-        /* Diagonal connections */
-        repeating-linear-gradient(
-            45deg,
-            transparent,
-            transparent 20px,
-            rgba(255, 0, 85, 0.02) 20px,
-            rgba(255, 0, 85, 0.02) 22px
-        ),
-        repeating-linear-gradient(
-            -45deg,
-            transparent,
-            transparent 20px,
-            rgba(136, 0, 255, 0.02) 20px,
-            rgba(136, 0, 255, 0.02) 22px
-        ),
-        /* Connection nodes */
-        radial-gradient(circle at 50% 50%, rgba(0, 255, 136, 0.05) 1px, transparent 2px);
-    background-size:
-        50px 50px,
-        50px 50px,
-        100px 100px,
-        100px 100px,
-        200px 200px;
+        );
     pointer-events: none;
     z-index: 1;
-    animation:
-        gridPulse 4s ease-in-out infinite,
-        dataFlow 15s linear infinite;
+    animation: gridPulse 4s ease-in-out infinite;
 }
 
 /* Removed scroll shake effects for static feel as per original brief */
@@ -136,51 +110,37 @@ body::before {
 }
 
 @keyframes glitchOverlay {
-    0%, 85%, 100% {
+    0%, 88%, 100% { 
         opacity: 0;
         background: none;
-        transform: translateX(0);
     }
-    86% {
-        opacity: 0.15;
+    89% { 
+        opacity: 0.3;
         background: repeating-linear-gradient(
             0deg,
-            rgba(0, 255, 136, 0.1) 0px,
-            transparent 2px,
-            transparent 4px
+            rgba(0, 255, 136, 0.2) 0px,
+            transparent 1px,
+            transparent 3px
         );
-        transform: translateX(-2px);
     }
-    87% {
+    90% {
         opacity: 0.2;
         background: repeating-linear-gradient(
             90deg,
-            rgba(255, 0, 85, 0.1) 0px,
+            rgba(255, 0, 85, 0.15) 0px,
             transparent 2px,
             transparent 4px
         );
-        transform: translateX(2px);
     }
-    88% {
+    91%, 93% { 
         opacity: 0.25;
         background: repeating-linear-gradient(
             45deg,
-            rgba(136, 0, 255, 0.08) 0px,
-            transparent 3px,
-            rgba(255, 170, 0, 0.08) 6px,
-            transparent 9px
-        );
-        transform: translateX(-1px);
-    }
-    89% {
-        opacity: 0.1;
-        background: repeating-linear-gradient(
-            -45deg,
             rgba(0, 255, 136, 0.1) 0px,
             transparent 2px,
-            transparent 4px
+            rgba(255, 0, 85, 0.1) 4px,
+            transparent 6px
         );
-        transform: translateX(1px);
     }
 }
 
@@ -206,7 +166,7 @@ body::before {
     height: 100%;
     background: radial-gradient(
         ellipse at center,
-        rgba(0, 255, 136, 0.15) 0%,
+        rgba(0, 255, 136, 0.1) 0%,
         transparent 70%
     );
     animation: heroGlow 4s ease-in-out infinite;
@@ -220,31 +180,13 @@ body::before {
     left: -50%;
     width: 200%;
     height: 200%;
-    background:
-        /* Circuit board lines */
-        linear-gradient(0deg, transparent 49%, rgba(0, 255, 136, 0.1) 50%, transparent 51%),
-        linear-gradient(90deg, transparent 49%, rgba(0, 255, 136, 0.1) 50%, transparent 51%),
-        linear-gradient(45deg, transparent 49%, rgba(255, 0, 85, 0.08) 50%, transparent 51%),
-        linear-gradient(-45deg, transparent 49%, rgba(255, 0, 85, 0.08) 50%, transparent 51%),
-        /* Animated nodes */
-        radial-gradient(circle at 25% 25%, rgba(0, 255, 136, 0.3) 1px, transparent 2px),
-        radial-gradient(circle at 75% 25%, rgba(255, 0, 85, 0.3) 1px, transparent 2px),
-        radial-gradient(circle at 25% 75%, rgba(136, 0, 255, 0.3) 1px, transparent 2px),
-        radial-gradient(circle at 75% 75%, rgba(255, 170, 0, 0.3) 1px, transparent 2px);
-    background-size:
-        100px 100px,
-        100px 100px,
-        140px 140px,
-        140px 140px,
-        200px 200px,
-        200px 200px,
-        200px 200px,
-        200px 200px;
-    animation:
-        circuitFlow 8s linear infinite,
-        nodePulse 2s ease-in-out infinite alternate;
+    background: repeating-conic-gradient(
+        from 0deg,
+        transparent 0deg 2deg,
+        rgba(0, 255, 136, 0.05) 2deg 4deg
+    );
+    animation: rotate 30s linear infinite;
     z-index: -1;
-    opacity: 0.6;
 }
 
 @keyframes heroGlow {
@@ -252,105 +194,9 @@ body::before {
     50% { opacity: 1; transform: scale(1.2); }
 }
 
-@keyframes circuitFlow {
-    0% {
-        background-position:
-            0 0,
-            0 0,
-            0 0,
-            0 0,
-            0 0,
-            0 0,
-            0 0,
-            0 0;
-    }
-    100% {
-        background-position:
-            100px 100px,
-            -100px 100px,
-            140px -140px,
-            -140px 140px,
-            200px 200px,
-            -200px 200px,
-            200px -200px,
-            -200px -200px;
-    }
-}
-
-@keyframes nodePulse {
-    0% {
-        opacity: 0.4;
-        transform: scale(1);
-    }
-    100% {
-        opacity: 0.8;
-        transform: scale(1.1);
-    }
-}
-
-/* Floating Particles for Hero */
-.hero-particles {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: -1;
-    overflow: hidden;
-}
-
-.hero-particles::before,
-.hero-particles::after {
-    content: '';
-    position: absolute;
-    width: 4px;
-    height: 4px;
-    background: var(--accent-green);
-    border-radius: 50%;
-    box-shadow:
-        0 0 10px var(--accent-green),
-        0 0 20px var(--accent-green),
-        0 0 30px var(--accent-green);
-    animation: float 6s ease-in-out infinite;
-}
-
-.hero-particles::before {
-    top: 20%;
-    left: 15%;
-    animation-delay: 0s;
-    animation-duration: 8s;
-}
-
-.hero-particles::after {
-    top: 70%;
-    right: 20%;
-    animation-delay: 3s;
-    animation-duration: 10s;
-    background: var(--accent-red);
-    box-shadow:
-        0 0 10px var(--accent-red),
-        0 0 20px var(--accent-red),
-        0 0 30px var(--accent-red);
-}
-
-@keyframes float {
-    0%, 100% {
-        transform: translateY(0) translateX(0) scale(1);
-        opacity: 0.7;
-    }
-    25% {
-        transform: translateY(-20px) translateX(10px) scale(1.1);
-        opacity: 1;
-    }
-    50% {
-        transform: translateY(-10px) translateX(-15px) scale(0.9);
-        opacity: 0.8;
-    }
-    75% {
-        transform: translateY(-30px) translateX(5px) scale(1.05);
-        opacity: 0.9;
-    }
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
 .logo-container {
@@ -732,27 +578,8 @@ body::before {
             rgba(0, 255, 136, 0.1) 0%,
             transparent 50%
         );
-    animation: dataFlow 5s ease-in-out infinite;
+    animation: utilityPulse 5s ease-in-out infinite;
     z-index: -1;
-}
-
-@keyframes dataFlow {
-    0% {
-        background-position:
-            0 0,
-            0 0,
-            0 0,
-            0 0,
-            0 0;
-    }
-    100% {
-        background-position:
-            50px 50px,
-            -50px 50px,
-            100px -100px,
-            -100px 100px,
-            200px 200px;
-    }
 }
 
 @keyframes utilityPulse {
