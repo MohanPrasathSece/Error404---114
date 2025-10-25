@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>$404 - Utility Not Found</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Matrix Rain Background -->
+    <canvas id="matrix-rain"></canvas>
+    
+    <!-- Glitch Overlay -->
+    <div class="glitch-overlay"></div>
+    
+    <!-- Scanning Lines -->
+    <div class="scan-lines"></div>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-particles"></div>
+        <div class="logo-container">
+            <h1 class="logo glitch" data-text="$404">$404</h1>
+            <p class="subtitle">utility not found<span class="cursor">_</span></p>
+            <p class="error-msg">&gt; An error occurred while finding purpose.</p>
+        </div>
+        
+        <div class="button-group">
+            <button class="btn btn-primary" onclick="buyToken()">Buy $404</button>
+            <button class="btn btn-secondary" onclick="retryLoad()">Retry</button>
+        </div>
+    </section>
+
+    <!-- Terminal Section -->
+    <section class="terminal">
+        <div class="terminal-window">
+            <div class="terminal-header">
+                <span class="terminal-dot red"></span>
+                <span class="terminal-dot yellow"></span>
+                <span class="terminal-dot green"></span>
+                <span class="terminal-title">terminal.exe</span>
+            </div>
+            <div class="terminal-body">
+                <div id="terminal-output"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Utility Section -->
+    <section class="utility">
+        <h2 class="section-title glitch" data-text="UTILITY NOT FOUND">UTILITY NOT FOUND</h2>
+        <p class="section-subtitle">"If you're reading this, it's already too late."</p>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">utility:</div>
+                <div class="stat-value error">0%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">purpose:</div>
+                <div class="stat-value corrupted">corrupted</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">status:</div>
+                <div class="stat-value undefined">undefined</div>
+            </div>
+        </div>
+
+        <button class="btn btn-broken" onclick="openWhitepaper()">Access Whitepaper</button>
+    </section>
+
+    <!-- Tokenomics Section -->
+    <section class="tokenomics">
+        <h2 class="section-title">TOKENOMICS</h2>
+        <p class="section-subtitle">&gt; Loading distribution data...</p>
+        
+        <div class="tokenomics-container">
+            <div class="pie-chart">
+                <div class="pie-slice slice-1" style="--percentage: 50"></div>
+                <div class="pie-slice slice-2" style="--percentage: 25"></div>
+                <div class="pie-slice slice-3" style="--percentage: 15"></div>
+                <div class="pie-slice slice-4" style="--percentage: 10"></div>
+                <div class="pie-center">
+                    <span class="pie-error">ERROR</span>
+                </div>
+            </div>
+            
+            <div class="tokenomics-legend">
+                <div class="legend-item">
+                    <span class="legend-color" style="background: #ff0055"></span>
+                    <span class="legend-text">50% Lost Forever</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: #00ff88"></span>
+                    <span class="legend-text">25% Error Handling</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: #8800ff"></span>
+                    <span class="legend-text">15% Developer Tears</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: #ffaa00"></span>
+                    <span class="legend-text">10% Undefined</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Team Section -->
+    <section class="team">
+        <h2 class="section-title">TEAM</h2>
+        <p class="section-subtitle">&gt; Failed to fetch team data</p>
+
+        <div class="team-grid">
+            <div class="team-card">
+                <div class="team-image broken-image">
+                    <span class="image-error">IMAGE<br>MISSING</span>
+                </div>
+                <div class="team-name">[REDACTED]</div>
+                <div class="team-role">Role: Unknown</div>
+                <div class="team-bio">Bio: Failed to load.</div>
+            </div>
+
+            <div class="team-card">
+                <div class="team-image broken-image">
+                    <span class="image-error">IMAGE<br>MISSING</span>
+                </div>
+                <div class="team-name">[REDACTED]</div>
+                <div class="team-role">Role: Unknown</div>
+                <div class="team-bio">Bio: Failed to load.</div>
+            </div>
+
+            <div class="team-card">
+                <div class="team-image broken-image">
+                    <span class="image-error">IMAGE<br>MISSING</span>
+                </div>
+                <div class="team-name">[REDACTED]</div>
+                <div class="team-role">Role: Unknown</div>
+                <div class="team-bio">Bio: Failed to load.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="social-links">
+            <a href="#" class="social-link" data-error="twitter.com/404 - connection refused">twitter</a>
+            <span class="separator">|</span>
+            <a href="#" class="social-link" data-error="telegram link corrupted">telegram</a>
+            <span class="separator">|</span>
+            <a href="#" class="social-link" data-error="dex not found (404)">dex</a>
+            <span class="separator">|</span>
+            <a href="#" class="social-link" data-error="docs.pdf failed to load">docs</a>
+        </div>
+        
+        <div class="footer-text">
+            <p>&gt; end of transmission<span class="cursor">_</span></p>
+            <p class="tagline">$404 - Utility Not Found. The only coin that failed on purpose.</p>
+        </div>
+    </footer>
+
+    <!-- Popup Modals -->
+    <div id="error-popup" class="popup">
+        <div class="popup-content">
+            <div class="popup-header">
+                <span>ERROR</span>
+                <button class="popup-close" onclick="closePopup()">[X]</button>
+            </div>
+            <div class="popup-body">
+                <p id="popup-message"></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
