@@ -19,6 +19,13 @@
     <!-- Scanning Lines -->
     <div class="scan-lines"></div>
 
+    <!-- Neon Grid Background -->
+    <div class="neon-grid"></div>
+    <!-- Ripple Pulses -->
+    <div class="bg-ripples"></div>
+    <!-- Diagonal Sweep Light -->
+    <div class="bg-sweep"></div>
+
     <!-- Hero Section -->
     <section class="hero">
         <div class="logo-container">
@@ -115,8 +122,8 @@
 
         <div class="team-grid">
             <div class="team-card">
-                <div class="team-image broken-image">
-                    <span class="image-error">IMAGE<br>MISSING</span>
+                <div class="team-image hacker dp-a">
+                    <img src="https://api.dicebear.com/7.x/adventurer/png?seed=404alpha&backgroundColor=transparent&size=200" alt="Team member avatar alpha">
                 </div>
                 <div class="team-name">[REDACTED]</div>
                 <div class="team-role">Role: Unknown</div>
@@ -124,8 +131,8 @@
             </div>
 
             <div class="team-card">
-                <div class="team-image broken-image">
-                    <span class="image-error">IMAGE<br>MISSING</span>
+                <div class="team-image hacker dp-b">
+                    <img src="https://api.dicebear.com/7.x/bottts/png?seed=404beta&backgroundColor=transparent&size=200" alt="Team member avatar beta">
                 </div>
                 <div class="team-name">[REDACTED]</div>
                 <div class="team-role">Role: Unknown</div>
@@ -133,12 +140,51 @@
             </div>
 
             <div class="team-card">
-                <div class="team-image broken-image">
-                    <span class="image-error">IMAGE<br>MISSING</span>
+                <div class="team-image hacker dp-c">
+                    <img src="https://api.dicebear.com/7.x/shapes/png?seed=404gamma&backgroundColor=transparent&size=200" alt="Team member avatar gamma">
                 </div>
                 <div class="team-name">[REDACTED]</div>
                 <div class="team-role">Role: Unknown</div>
                 <div class="team-bio">Bio: Failed to load.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 404 Mini Game Section -->
+    <section class="mini-game">
+        <h2 class="section-title">MINI GAME: SYSTEM COLLAPSE</h2>
+        <p class="section-subtitle">&gt; Catch the falling errors before the system crashes</p>
+        
+        <div class="game-container">
+            <div class="game-header">
+                <div class="game-stat">
+                    <span class="stat-label">ERRORS CAUGHT:</span>
+                    <span id="score" class="stat-value">0</span>
+                </div>
+                <div class="game-stat">
+                    <span class="stat-label">SYSTEM HEALTH:</span>
+                    <span id="health" class="stat-value">100%</span>
+                </div>
+                <div class="game-stat">
+                    <span class="stat-label">STATUS:</span>
+                    <span id="status" class="stat-value">RUNNING</span>
+                </div>
+            </div>
+            
+            <div class="game-area" id="gameArea">
+                <div class="player" id="player">
+                    <span class="player-symbol">&gt;_</span>
+                </div>
+                <div class="game-instructions" id="instructions">
+                    <p>Use A/D or ←/→ to move</p>
+                    <p>Catch falling errors to prevent system collapse</p>
+                    <p>Press SPACE to start</p>
+                </div>
+            </div>
+            
+            <div class="game-controls">
+                <button class="btn btn-primary" onclick="startGame()">START SYSTEM</button>
+                <button class="btn btn-secondary" onclick="resetGame()">REBOOT</button>
             </div>
         </div>
     </section>
@@ -148,9 +194,7 @@
         <div class="social-links">
             <a href="#" class="social-link" data-error="twitter.com/404 - connection refused">twitter</a>
             <span class="separator">|</span>
-            <a href="#" class="social-link" data-error="telegram link corrupted">telegram</a>
-            <span class="separator">|</span>
-            <a href="#" class="social-link" data-error="dex not found (404)">dex</a>
+            <a href="#" class="social-link" data-error="buy flow unavailable">buy</a>
             <span class="separator">|</span>
             <a href="#" class="social-link" data-error="docs.pdf failed to load">docs</a>
         </div>
