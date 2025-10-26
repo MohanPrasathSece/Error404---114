@@ -40,6 +40,54 @@
         </div>
     </section>
 
+    <!-- Roadmap / Progress -->
+    <section class="roadmap" id="roadmap">
+        <div class="roadmap-container">
+            <div class="roadmap-item" data-key="utility">
+                <span class="roadmap-status">[ ]</span>
+                <span class="roadmap-text">Unlock Utility (Terminal Hunt)</span>
+            </div>
+            <div class="roadmap-item" data-key="tokenomics">
+                <span class="roadmap-status">[ ]</span>
+                <span class="roadmap-text">Unlock Tokenomics (Memory Match)</span>
+            </div>
+            <div class="roadmap-item" data-key="team">
+                <span class="roadmap-status">[ ]</span>
+                <span class="roadmap-text">Unlock Team (Defeat Boss or 300 Score)</span>
+            </div>
+            <div class="roadmap-item" data-key="reward">
+                <span class="roadmap-status">[ ]</span>
+                <span class="roadmap-text">Claim Reward</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Puzzle Game Section -->
+    <section class="puzzle" id="puzzle">
+        <h2 class="section-title">PUZZLE: CIRCUIT UNLOCK</h2>
+        <p class="section-subtitle">> Toggle nodes to route the signal. Solve to unlock access.</p>
+
+        <div class="puzzle-container">
+            <div class="puzzle-header">
+                <div class="game-stat">
+                    <span class="stat-label">MOVES:</span>
+                    <span id="puzzleMoves" class="stat-value">0</span>
+                </div>
+                <div class="game-stat">
+                    <span class="stat-label">STATUS:</span>
+                    <span id="puzzleStatus" class="stat-value">INCOMPLETE</span>
+                </div>
+            </div>
+
+            <div class="puzzle-grid" id="puzzleGrid" aria-label="Puzzle grid" role="grid"></div>
+
+            <div class="puzzle-controls">
+                <button class="btn btn-primary" id="puzzleNew">NEW PUZZLE</button>
+                <button class="btn btn-secondary" id="puzzleReset">RESET</button>
+            </div>
+        </div>
+    </section>
+
     <!-- Terminal Section -->
     <section class="terminal">
         <div class="terminal-window">
@@ -76,6 +124,9 @@
         </div>
 
         <button class="btn btn-broken" onclick="openWhitepaper()">Access Whitepaper</button>
+        <div class="section-lock" data-section="utility">
+            <div class="lock-msg">LOCKED — Find and click the hidden key token in the Terminal: [KEY-UTIL]</div>
+        </div>
     </section>
 
     <!-- Tokenomics Section -->
@@ -214,6 +265,20 @@
             </div>
             <div class="popup-body">
                 <p id="popup-message"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reward Modal -->
+    <div id="reward-popup" class="popup">
+        <div class="popup-content">
+            <div class="popup-header">
+                <span>REWARD UNLOCKED</span>
+                <button class="popup-close" onclick="closeReward()">[X]</button>
+            </div>
+            <div class="popup-body">
+                <p>> Congrats, Operative. All sections unlocked.</p>
+                <p><button class="btn btn-primary" onclick="downloadReward()">Download Hacker Badge</button></p>
             </div>
         </div>
     </div>

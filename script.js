@@ -13,22 +13,24 @@ function resizeMatrixCanvas() {
     initMatrix();
 }
 
-// Disable matrix background and hide canvas (neon grid handles BG)
-const disableMatrix = true;
-canvas.style.display = 'none';
+// Use canvas for a neon letter rain background with shatter impacts
+const disableMatrix = false; // enable matrix-style background
+canvas.style.display = '';
 
-const chars = '01{}[]<>;:/$#=+-%|\\';
+const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz{}[]<>;:/$#=+-%|\\';
 let fontSize = 16;
 let columns = 0;
 let drops = [];
+let dropSpeeds = [];
 
 function initMatrix() {
     columns = Math.floor(canvas.width / fontSize);
     drops = new Array(columns).fill(0).map(() => Math.random() * -50);
+    dropSpeeds = new Array(columns).fill(0).map(() => 2 + Math.random() * 3); // 2..5 px/frame
 }
 
 resizeMatrixCanvas();
-window.addEventListener('resize', resizeMatrixCanvas);
+window.addEventListener('resize', () => { resizeMatrixCanvas(); shatterLast = 0; });
 
 let last = 0;
 const frameInterval = 1000 / 30; // ~30 FPS for perf
@@ -72,10 +74,13 @@ function drawMatrix(ts) {
         const jx = glitchTimer > 0 ? (Math.random() * 2 - 1) : 0;
         bctx.fillText(text, x + jx, y);
 
-        if (y > canvas.height && Math.random() > 0.975) {
+        if (y > canvas.height) {
+            // impact: spawn shards near bottom
+            if (Math.random() > 0.7) triggerShatter(x, canvas.height - 4, 6 + Math.floor(Math.random()*6), 0.8);
             drops[i] = Math.random() * -20;
+            dropSpeeds[i] = 2 + Math.random() * 3;
         }
-        drops[i] += 1;
+        drops[i] += dropSpeeds[i];
     }
 
     // Blit buffer to visible canvas
@@ -96,11 +101,127 @@ function drawMatrix(ts) {
         triggerGlitch();
     }
 
+    // Step and render shards over the rain
+    const dt = frameInterval / 1000;
+    stepShards(dt);
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (const s of shards) {
+        ctx.translate(s.x, s.y);
+        ctx.rotate(s.rot);
+        const a = Math.max(0, Math.min(1, s.life));
+        ctx.fillStyle = s.color;
+        ctx.globalAlpha = 0.45 * a;
+        ctx.fillRect(-s.w * 0.5, -s.h * 0.5, s.w, s.h);
+        ctx.globalAlpha = 1;
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+    }
+    ctx.restore();
+
     requestAnimationFrame(drawMatrix);
 }
 
 requestAnimationFrame(drawMatrix);
 const reduceMotion = true;
+
+// === Aggressive Shatter & Fall Background ===
+let shards = [];
+let shatterLast = 0;
+const SHATTER_FPS = 60;
+const SHATTER_INTERVAL = 1000 / SHATTER_FPS;
+let shatterTimer = 0;
+
+function spawnShard(x, y, power = 1) {
+    const ang = Math.random() * Math.PI * 2;
+    const speed = (Math.random() * 6 + 4) * power;
+    shards.push({
+        x, y,
+        vx: Math.cos(ang) * speed,
+        vy: Math.sin(ang) * speed - (6 * power),
+        w: 6 + Math.random() * 10,
+        h: 6 + Math.random() * 14,
+        rot: Math.random() * Math.PI,
+        rv: (Math.random() - 0.5) * 0.2,
+        life: 1,
+        color: Math.random() > 0.5 ? '#00ff88' : '#ff0055'
+    });
+    if (shards.length > 320) shards.shift();
+}
+
+function triggerShatter(cx, cy, count = 80, power = 1) {
+    for (let i = 0; i < count; i++) {
+        const jitterX = cx + (Math.random() * 120 - 60);
+        const jitterY = cy + (Math.random() * 60 - 30);
+        spawnShard(jitterX, jitterY, power);
+    }
+}
+
+function stepShards(dt) {
+    const g = 18; // gravity
+    const air = 0.995;
+    for (const s of shards) {
+        s.vy += g * dt;
+        s.vx *= air; s.vy *= air;
+        s.x += s.vx; s.y += s.vy;
+        s.rot += s.rv;
+        // fade as it falls
+        s.life -= 0.35 * dt;
+    }
+    // remove dead or far below
+    shards = shards.filter(s => s.life > 0 && s.y < canvas.height + 120);
+}
+
+function drawShatterFall(ts) {
+    if (!shatterLast) shatterLast = ts;
+    const dtms = ts - shatterLast;
+    if (dtms < SHATTER_INTERVAL) { requestAnimationFrame(drawShatterFall); return; }
+    const dt = dtms / 1000;
+    shatterLast = ts;
+    shatterTimer += dt;
+
+    // clear
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // periodic random shatters
+    if (shatterTimer > 1.2) {
+        shatterTimer = 0;
+        const cx = Math.random() * canvas.width;
+        const cy = Math.random() * (canvas.height * 0.6);
+        triggerShatter(cx, cy, 90, 1.1);
+    }
+    // gentle debris rain
+    if (Math.random() > 0.8) spawnShard(Math.random() * canvas.width, -20, 0.6);
+
+    stepShards(dt);
+
+    // draw shards
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (const s of shards) {
+        ctx.translate(s.x, s.y);
+        ctx.rotate(s.rot);
+        const a = Math.max(0, Math.min(1, s.life));
+        ctx.fillStyle = s.color;
+        ctx.globalAlpha = 0.45 * a;
+        ctx.fillRect(-s.w * 0.5, -s.h * 0.5, s.w, s.h);
+        ctx.globalAlpha = 1;
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+    }
+    ctx.restore();
+
+    requestAnimationFrame(drawShatterFall);
+}
+
+function startShatterFall() {
+    if (!canvas.width || !canvas.height) resizeMatrixCanvas();
+    shards = [];
+    shatterLast = 0; shatterTimer = 0;
+    // initial big shatter from hero center-ish
+    const hx = window.innerWidth * 0.5;
+    const hy = window.innerHeight * 0.35;
+    triggerShatter(hx, hy, 140, 1.3);
+    requestAnimationFrame(drawShatterFall);
+}
 
 // Terminal Animation
 const terminalOutput = document.getElementById('terminal-output');
@@ -135,12 +256,16 @@ function typeTerminalMessage() {
         const line = document.createElement('div');
         line.className = `terminal-line ${message.error ? 'terminal-error' : ''}`;
         line.textContent = message.text;
+        line.classList.add('terminal-newline');
         terminalOutput.appendChild(line);
-        // keep newest visible
-        terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        // keep newest visible only if user is near bottom
+        if (shouldAutoScroll(terminalOutput)) {
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        }
+        setTimeout(() => line.classList.remove('terminal-newline'), 600);
 
         // Mirror to browser console as well
-        if (message.error) console.error(message.text);
+        if (message.error) { __mirrorLock = true; console.error(message.text); __mirrorLock = false; }
         else console.log(message.text);
         
         messageIndex++;
@@ -155,12 +280,47 @@ function typeTerminalMessage() {
     }
 }
 
+// Drop a clickable utility key into the terminal once, if not unlocked
+let utilityKeyDropped = false;
+function scheduleUtilityKey() {
+    if (progress.utility) return;
+    if (utilityKeyDropped) return;
+    utilityKeyDropped = true;
+    setTimeout(() => {
+        const line = document.createElement('div');
+        line.className = 'terminal-line';
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = '[KEY-UTIL]';
+        btn.style.fontFamily = 'monospace';
+        btn.style.background = 'transparent';
+        btn.style.border = '1px dashed var(--accent-green)';
+        btn.style.color = 'var(--accent-green)';
+        btn.style.padding = '2px 6px';
+        btn.style.cursor = 'pointer';
+        btn.addEventListener('click', () => {
+            unlock('utility');
+        });
+        line.append('> ', btn, ' — click to claim');
+        terminalOutput.appendChild(line);
+        if (shouldAutoScroll(terminalOutput)) terminalOutput.scrollTop = terminalOutput.scrollHeight;
+    }, 2200);
+}
+
 // Start terminal animation when page loads
 window.addEventListener('load', () => {
     setTimeout(typeTerminalMessage, 500);
     
     // Initialize game elements
     initializeGameElements();
+    // Play landing animation once on load
+    try { playLandingShatter(); } catch (e) { console.error(e); }
+    // Initialize memory puzzle game
+    try { initMemoryPuzzle(); } catch (e) { console.error(e); }
+    // Apply meta-puzzle progress and maybe drop terminal key
+    try { loadProgress(); applyLocks(); updateRoadmap(); scheduleUtilityKey(); } catch (e) { console.error(e); }
+    // Start aggressive shatter+fall background
+    try { startShatterFall(); } catch (e) { console.error(e); }
 });
 
 // Buy Token Button
@@ -493,8 +653,12 @@ function appendTerminal(text, isError = false) {
     const line = document.createElement('div');
     line.className = `terminal-line ${isError ? 'terminal-error' : ''}`;
     line.textContent = text;
+    line.classList.add('terminal-newline');
     terminalOutput.appendChild(line);
-    terminalOutput.scrollTop = terminalOutput.scrollHeight;
+    if (shouldAutoScroll(terminalOutput)) {
+        terminalOutput.scrollTop = terminalOutput.scrollHeight;
+    }
+    setTimeout(() => line.classList.remove('terminal-newline'), 600);
 }
 
 // Capture runtime JS errors
@@ -510,12 +674,21 @@ window.addEventListener('unhandledrejection', (e) => {
     appendTerminal(`> Promise Rejection: ${reason}`, true);
 });
 
-// Mirror console.error to terminal as well
+// Mirror console.error to terminal as well (with guard to avoid double-echo)
+let __mirrorLock = false;
 const __origConsoleError = console.error.bind(console);
 console.error = (...args) => {
-    appendTerminal('> ' + args.map(String).join(' '), true);
+    if (!__mirrorLock) {
+        appendTerminal('> ' + args.map(String).join(' '), true);
+    }
     __origConsoleError(...args);
 };
+
+// determine if we should auto-scroll terminal (user near bottom)
+function shouldAutoScroll(el) {
+    const threshold = 16; // px from bottom
+    return el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+}
 
 // === 404 MINI GAME: SYSTEM COLLAPSE (ENHANCED) ===
 let gameState = {
@@ -664,6 +837,25 @@ function resetGame() {
     player.style.left = '50%';
     player.style.boxShadow = '';
     gameArea.classList.remove('system-collapse');
+}
+
+// Update UI and handle timers/buffs
+function updateUI() {
+    if (scoreEl) scoreEl.textContent = String(gameState.score);
+    if (healthEl) {
+        const h = Math.max(0, Math.min(100, Math.round(gameState.health)));
+        healthEl.textContent = h + '%';
+        healthEl.style.color = h <= 30 ? 'var(--error-red)' : 'var(--accent-green)';
+    }
+    if (statusEl) {
+        let status = gameState.running ? 'ACTIVE' : 'READY';
+        if (gameState.doublePoints > 0) status = '2X POINTS';
+        if (gameState.shield > 0) status = `SHIELD x${gameState.shield}`;
+        statusEl.textContent = status;
+        statusEl.style.color = gameState.running ? 'var(--accent-green)' : 'var(--text-secondary)';
+    }
+    // decrement timers
+    if (gameState.doublePoints > 0) gameState.doublePoints--;
 }
 
 function spawnError() {
@@ -824,6 +1016,8 @@ function updateErrors() {
                     error.element.remove();
                     gameState.bossActive = false;
                     appendTerminal(`> BOSS DEFEATED! +${error.type.points} points`, false);
+                    // Unlock Team on boss defeat
+                    unlock('team');
                     return false;
                 } else {
                     // Boss still alive, just flash
@@ -960,8 +1154,50 @@ function gameLoop() {
     // Increase difficulty over time
     gameState.gameSpeed += 0.001;
     gameState.spawnRate = Math.min(0.08, gameState.spawnRate + 0.0001);
+    // Unlock Team if score threshold reached
+    if (!progress.team && gameState.score >= 300) unlock('team');
     
     requestAnimationFrame(gameLoop);
+}
+
+// Landing animation: hacking theme "everything breaking into pieces"
+function playLandingShatter() {
+    const overlay = document.querySelector('.glitch-overlay');
+    const hero = document.querySelector('.hero');
+    // show glitch overlay briefly
+    if (overlay) {
+        overlay.style.display = 'block';
+        overlay.style.position = 'fixed';
+        overlay.style.inset = '0';
+        overlay.style.zIndex = '9999';
+        overlay.style.pointerEvents = 'none';
+        overlay.style.animation = 'glitchOverlay 900ms ease-in-out';
+    }
+    // spawn shards from hero center and screen center
+    const bursts = 80;
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
+    let hx = centerX, hy = centerY;
+    if (hero) {
+        const r = hero.getBoundingClientRect();
+        hx = r.left + r.width / 2;
+        hy = r.top + r.height / 2;
+    }
+    for (let i = 0; i < bursts; i++) {
+        const t = i * 8;
+        setTimeout(() => createBreakParticle(hx + (Math.random()*80-40), hy + (Math.random()*40-20)), t);
+        if (i % 3 === 0) setTimeout(() => createBreakParticle(centerX, centerY), t + 4);
+    }
+    // screen shake pulses
+    const shakes = 4;
+    for (let i = 0; i < shakes; i++) {
+        setTimeout(() => {
+            document.body.classList.add('shake-burst');
+            setTimeout(() => document.body.classList.remove('shake-burst'), 350);
+        }, 120 + i * 160);
+    }
+    // hide overlay
+    setTimeout(() => { if (overlay) overlay.style.display = 'none'; }, 1000);
 }
 
 // Enhanced breaking effects for sections
@@ -1138,4 +1374,354 @@ function createBreakParticle(x = Math.random() * window.innerWidth, y = Math.ran
     }
     
     requestAnimationFrame(animate);
+}
+
+// === PUZZLE: CIRCUIT UNLOCK (Lights Out variant) ===
+let puzzle = {
+    size: 5,
+    state: [],
+    initial: [],
+    moves: 0,
+    gridEl: null,
+    movesEl: null,
+    statusEl: null,
+    containerEl: null,
+};
+
+function initPuzzle(size = 5) {
+    puzzle.size = size;
+    puzzle.gridEl = document.getElementById('puzzleGrid');
+    puzzle.movesEl = document.getElementById('puzzleMoves');
+    puzzle.statusEl = document.getElementById('puzzleStatus');
+    puzzle.containerEl = document.querySelector('.puzzle-container');
+    const newBtn = document.getElementById('puzzleNew');
+    const resetBtn = document.getElementById('puzzleReset');
+
+    if (!puzzle.gridEl || !puzzle.movesEl || !puzzle.statusEl || !puzzle.containerEl) {
+        console.warn('Puzzle elements missing');
+        return;
+    }
+
+    newBtn && newBtn.addEventListener('click', newPuzzle);
+    resetBtn && resetBtn.addEventListener('click', resetPuzzle);
+
+    // Build empty state
+    puzzle.state = Array.from({ length: size }, () => Array(size).fill(false));
+    puzzle.initial = puzzle.state.map(row => row.slice());
+    puzzle.moves = 0;
+    renderPuzzle();
+    newPuzzle();
+}
+
+function renderPuzzle() {
+    const n = puzzle.size;
+    puzzle.gridEl.innerHTML = '';
+    puzzle.gridEl.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
+    for (let r = 0; r < n; r++) {
+        for (let c = 0; c < n; c++) {
+            const cell = document.createElement('button');
+            cell.type = 'button';
+            cell.className = 'puzzle-cell ' + (puzzle.state[r][c] ? 'active' : 'inactive');
+            cell.setAttribute('role', 'gridcell');
+            cell.setAttribute('aria-pressed', String(!!puzzle.state[r][c]));
+            cell.dataset.r = String(r);
+            cell.dataset.c = String(c);
+            cell.textContent = puzzle.state[r][c] ? '■' : '□';
+            cell.addEventListener('click', () => toggleAt(r, c, true));
+            puzzle.gridEl.appendChild(cell);
+        }
+    }
+    updatePuzzleUI();
+}
+
+function updatePuzzleUI() {
+    if (puzzle.movesEl) puzzle.movesEl.textContent = String(puzzle.moves);
+    const n = puzzle.size;
+    const cells = puzzle.gridEl.querySelectorAll('.puzzle-cell');
+    let idx = 0;
+    for (let r = 0; r < n; r++) {
+        for (let c = 0; c < n; c++) {
+            const el = cells[idx++];
+            if (!el) continue;
+            el.classList.toggle('active', !!puzzle.state[r][c]);
+            el.classList.toggle('inactive', !puzzle.state[r][c]);
+            el.setAttribute('aria-pressed', String(!!puzzle.state[r][c]));
+            el.textContent = puzzle.state[r][c] ? '■' : '□';
+        }
+    }
+}
+
+function setPuzzleStatus(text, colorVar) {
+    if (!puzzle.statusEl) return;
+    puzzle.statusEl.textContent = text;
+    puzzle.statusEl.style.color = colorVar || 'var(--accent-green)';
+}
+
+function flip(r, c) {
+    const n = puzzle.size;
+    if (r < 0 || c < 0 || r >= n || c >= n) return;
+    puzzle.state[r][c] = !puzzle.state[r][c];
+}
+
+function toggleAt(r, c, countMove) {
+    flip(r, c);
+    flip(r - 1, c);
+    flip(r + 1, c);
+    flip(r, c - 1);
+    flip(r, c + 1);
+    if (countMove) puzzle.moves++;
+    updatePuzzleUI();
+    checkPuzzleWin();
+}
+
+function checkPuzzleWin() {
+    const n = puzzle.size;
+    for (let r = 0; r < n; r++) {
+        for (let c = 0; c < n; c++) {
+            if (!puzzle.state[r][c]) {
+                setPuzzleStatus('INCOMPLETE', 'var(--text-secondary)');
+                puzzle.containerEl.classList.remove('puzzle-solved');
+                return false;
+            }
+        }
+    }
+    setPuzzleStatus('UNLOCKED', 'var(--accent-yellow)');
+    puzzle.containerEl.classList.add('puzzle-solved');
+    appendTerminal('> PUZZLE SOLVED: Circuit unlocked', false);
+    return true;
+}
+
+function newPuzzle() {
+    const n = puzzle.size;
+    // start from all true goal, then apply random toggles to generate solvable state
+    puzzle.state = Array.from({ length: n }, () => Array(n).fill(true));
+    // apply K random toggles
+    const K = n * n; // reasonable shuffle
+    for (let i = 0; i < K; i++) {
+        const r = Math.floor(Math.random() * n);
+        const c = Math.floor(Math.random() * n);
+        toggleAt(r, c, false);
+    }
+    puzzle.initial = puzzle.state.map(row => row.slice());
+    puzzle.moves = 0;
+    renderPuzzle();
+    setPuzzleStatus('INCOMPLETE', 'var(--text-secondary)');
+    puzzle.containerEl.classList.remove('puzzle-solved');
+    appendTerminal('> New puzzle generated', false);
+}
+
+function resetPuzzle() {
+    if (!puzzle.initial.length) return;
+    puzzle.state = puzzle.initial.map(row => row.slice());
+    puzzle.moves = 0;
+    renderPuzzle();
+    setPuzzleStatus('INCOMPLETE', 'var(--text-secondary)');
+    puzzle.containerEl.classList.remove('puzzle-solved');
+    appendTerminal('> Puzzle reset', false);
+}
+
+// === MEMORY MATCH PUZZLE (Hacking Symbols) ===
+let mem = {
+    symbols: ['<>', '{}', '[]', '()','//', '::', '==', '||', '&&', '$$', '##', '++'],
+    deck: [], // {id, symbol, matched}
+    flipped: [], // indices of flipped (max 2)
+    lock: false,
+    moves: 0,
+    gridEl: null,
+    movesEl: null,
+    statusEl: null,
+};
+
+function initMemoryPuzzle() {
+    mem.gridEl = document.getElementById('puzzleGrid');
+    mem.movesEl = document.getElementById('puzzleMoves');
+    mem.statusEl = document.getElementById('puzzleStatus');
+    const newBtn = document.getElementById('puzzleNew');
+    const resetBtn = document.getElementById('puzzleReset');
+    if (!mem.gridEl || !mem.movesEl || !mem.statusEl) return;
+    newBtn && newBtn.addEventListener('click', newMemoryPuzzle);
+    resetBtn && resetBtn.addEventListener('click', resetMemoryPuzzle);
+    newMemoryPuzzle();
+}
+
+function buildDeck() {
+    const base = mem.symbols.slice(0, 10); // 10 pairs => 20 cards (fits 5x4 nicely)
+    const pairs = base.flatMap((s, i) => ([{ id: i*2, symbol: s, matched: false }, { id: i*2+1, symbol: s, matched: false }]));
+    // shuffle
+    for (let i = pairs.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pairs[i], pairs[j]] = [pairs[j], pairs[i]];
+    }
+    return pairs;
+}
+
+function renderMemory() {
+    mem.gridEl.innerHTML = '';
+    // set grid to 5 columns, 4 rows
+    mem.gridEl.style.gridTemplateColumns = 'repeat(5, 1fr)';
+    mem.deck.forEach((card, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'puzzle-cell memory-card' + (card.matched ? ' matched' : '');
+        btn.dataset.index = String(idx);
+        btn.setAttribute('aria-pressed', 'false');
+        btn.textContent = '■'; // hidden face
+        btn.addEventListener('click', onCardClick);
+        mem.gridEl.appendChild(btn);
+    });
+    updateMemoryUI();
+}
+
+function updateMemoryUI() {
+    if (mem.movesEl) mem.movesEl.textContent = String(mem.moves);
+    if (!mem.statusEl) return;
+    const allMatched = mem.deck.length > 0 && mem.deck.every(c => c.matched);
+    mem.statusEl.textContent = allMatched ? 'UNLOCKED' : 'INCOMPLETE';
+    mem.statusEl.style.color = allMatched ? 'var(--accent-yellow)' : 'var(--text-secondary)';
+    if (allMatched) {
+        appendTerminal('> MEMORY MATCH SOLVED: Access granted', false);
+        unlock('tokenomics');
+    }
+}
+
+function onCardClick(e) {
+    const idx = Number(e.currentTarget.dataset.index);
+    if (mem.lock) return;
+    const card = mem.deck[idx];
+    if (!card || card.matched) return;
+    const already = mem.flipped.includes(idx);
+    if (already) return;
+    flipCardUI(idx, true);
+    mem.flipped.push(idx);
+    if (mem.flipped.length === 2) {
+        mem.lock = true;
+        mem.moves++;
+        const [a, b] = mem.flipped.map(i => mem.deck[i]);
+        if (a.symbol === b.symbol) {
+            setTimeout(() => {
+                a.matched = b.matched = true;
+                markMatchedUI(mem.flipped);
+                mem.flipped = [];
+                mem.lock = false;
+                updateMemoryUI();
+            }, 250);
+        } else {
+            setTimeout(() => {
+                flipCardUI(mem.flipped[0], false);
+                flipCardUI(mem.flipped[1], false);
+                mem.flipped = [];
+                mem.lock = false;
+                updateMemoryUI();
+            }, 600);
+        }
+    }
+}
+
+function flipCardUI(index, faceUp) {
+    const btn = mem.gridEl.querySelector(`.memory-card[data-index="${index}"]`);
+    if (!btn) return;
+    const card = mem.deck[index];
+    if (!card) return;
+    if (faceUp) {
+        btn.classList.add('flipped');
+        btn.textContent = card.symbol;
+    } else {
+        btn.classList.remove('flipped');
+        btn.textContent = '■';
+    }
+}
+
+function markMatchedUI(indices) {
+    indices.forEach(i => {
+        const btn = mem.gridEl.querySelector(`.memory-card[data-index="${i}"]`);
+        if (btn) btn.classList.add('matched');
+    });
+}
+
+function newMemoryPuzzle() {
+    mem.deck = buildDeck();
+    mem.flipped = [];
+    mem.moves = 0;
+    mem.lock = false;
+    renderMemory();
+    appendTerminal('> New memory puzzle generated', false);
+}
+
+function resetMemoryPuzzle() {
+    // reset flips and matches but keep deck order
+    mem.deck = mem.deck.map((c, i) => ({ id: i, symbol: c.symbol, matched: false }));
+    mem.flipped = [];
+    mem.moves = 0;
+    renderMemory();
+    appendTerminal('> Memory puzzle reset', false);
+}
+
+// === META-PUZZLE: Progress, Locks, Rewards ===
+let progress = { utility: false, tokenomics: false, team: false };
+
+function loadProgress() {
+    try {
+        const raw = localStorage.getItem('meta_progress');
+        if (raw) progress = { ...progress, ...JSON.parse(raw) };
+    } catch (_) { /* ignore */ }
+}
+
+function saveProgress() {
+    try { localStorage.setItem('meta_progress', JSON.stringify(progress)); } catch (_) { /* ignore */ }
+}
+
+function applyLocks() {
+    document.querySelectorAll('.section-lock').forEach(lock => {
+        const key = lock.getAttribute('data-section');
+        const unlocked = !!progress[key];
+        lock.classList.toggle('hidden', unlocked);
+        const section = lock.closest('section');
+        if (section) section.style.filter = unlocked ? '' : 'grayscale(0.3)';
+    });
+}
+
+function updateRoadmap() {
+    document.querySelectorAll('.roadmap-item').forEach(item => {
+        const key = item.getAttribute('data-key');
+        const status = item.querySelector('.roadmap-status');
+        const unlocked = key === 'reward' ? (progress.utility && progress.tokenomics && progress.team) : !!progress[key];
+        item.classList.toggle('unlocked', unlocked);
+        if (status) status.textContent = unlocked ? '[x]' : '[ ]';
+    });
+}
+
+function unlock(key) {
+    if (!progress[key]) {
+        progress[key] = true;
+        saveProgress();
+        applyLocks();
+        updateRoadmap();
+        appendTerminal(`> SECTION UNLOCKED: ${key.toUpperCase()}`, false);
+        if (progress.utility && progress.tokenomics && progress.team) {
+            showReward();
+        }
+    }
+}
+
+function showReward() {
+    const pop = document.getElementById('reward-popup');
+    if (pop) pop.classList.add('active');
+}
+
+function closeReward() {
+    const pop = document.getElementById('reward-popup');
+    if (pop) pop.classList.remove('active');
+}
+
+function downloadReward() {
+    const svg = `<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" style="background:#000"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00ff88"/><stop offset="100%" stop-color="#8800ff"/></linearGradient></defs><rect x="0" y="0" width="800" height="450" fill="#000"/><text x="50%" y="45%" fill="url(#g)" font-family="IBM Plex Mono, monospace" font-size="56" text-anchor="middle" style="letter-spacing:2px;">$404 OPERATIVE</text><text x="50%" y="60%" fill="#fff" font-family="Space Mono, monospace" font-size="22" opacity="0.8" text-anchor="middle">All Sections Unlocked</text><rect x="150" y="330" width="500" height="3" fill="#00ff88" opacity="0.6"/></svg>`;
+    const blob = new Blob([svg], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '404-operative-badge.svg';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
 }
