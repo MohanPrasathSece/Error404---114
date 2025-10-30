@@ -329,6 +329,10 @@ body::before { content: none; }
 
 .logo-container {
     margin-bottom: 3rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
 }
 
 .logo {
@@ -397,7 +401,9 @@ body::before { content: none; }
 .subtitle {
     font-size: clamp(1.2rem, 3vw, 1.8rem);
     color: var(--text-primary);
-    margin-bottom: 0.5rem;
+    margin-top: 1rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
     text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
 }
 
@@ -414,6 +420,23 @@ body::before { content: none; }
     font-size: clamp(0.9rem, 2vw, 1.1rem);
     color: var(--text-secondary);
     font-style: italic;
+}
+
+/* Prevent overlap of hero text with logo image */
+.hero .subtitle,
+.hero .error-msg {
+    margin-top: 0.5rem;
+    max-width: min(90vw, 900px);
+}
+
+.hero .error-msg {
+    line-height: 1.4;
+}
+
+@media (max-width: 600px) {
+    .logo-container { gap: 1.2rem; }
+    .subtitle { margin-top: 1rem; margin-bottom: 0.75rem; }
+    .hero .error-msg { margin-top: 0.5rem; }
 }
 
 /* Buttons */
@@ -794,12 +817,25 @@ body::before { content: none; }
 
 /* Visible logo image */
 .site-logo {
-    width: 64px;
-    height: 64px;
+    width: clamp(160px, 28vw, 280px);
+    height: auto;
     object-fit: contain;
     margin: 0 auto 1rem;
     display: block;
-    filter: drop-shadow(0 0 10px rgba(0,255,136,0.5));
+    filter: drop-shadow(0 0 20px rgba(0,255,136,0.6));
+}
+
+.glitch-img {
+    position: relative;
+    animation: imgGlitch 2.8s infinite;
+}
+
+@keyframes imgGlitch {
+    0%, 89%, 100% { transform: translate(0); filter: none; }
+    90% { transform: translate(-2px, 2px) skewX(1deg); filter: hue-rotate(20deg) saturate(1.2); }
+    91% { transform: translate(2px, -2px) skewX(-1deg); filter: hue-rotate(-20deg) saturate(1.2); }
+    92% { transform: translate(-1px, 1px); filter: contrast(1.1) brightness(1.05); }
+    93% { transform: translate(0); filter: none; }
 }
 
 .stats-grid {
@@ -966,22 +1002,21 @@ body::before { content: none; }
         0 0 80px rgba(0, 255, 136, 0.3),
         0 0 120px rgba(0, 255, 136, 0.1),
         inset 0 0 40px rgba(0, 255, 136, 0.2);
-    cursor: pointer;
-    transition: all 0.3s ease;
+    cursor: default;
+    transition: none;
 }
 
 .pie-chart:hover {
-    animation: 
-        rotate 25s linear infinite,
-        pieBreak 1.5s ease-in-out infinite,
-        pieGlitch 0.2s ease-in-out infinite;
-    border-color: var(--error-red);
+    /* Neutralized hover: keep steady on hover */
+    animation: rotate 25s linear infinite;
+    border-color: var(--accent-green);
     box-shadow: 
-        0 0 60px rgba(255, 0, 85, 0.8),
-        0 0 120px rgba(255, 0, 85, 0.5),
-        0 0 180px rgba(255, 0, 85, 0.3),
-        inset 0 0 60px rgba(255, 0, 85, 0.2);
-    filter: hue-rotate(180deg) saturate(1.5);
+        0 0 40px rgba(0, 255, 136, 0.5),
+        0 0 80px rgba(0, 255, 136, 0.3),
+        0 0 120px rgba(0, 255, 136, 0.1),
+        inset 0 0 40px rgba(0, 255, 136, 0.2);
+    filter: none;
+    transition: none;
 }
 
 @keyframes pieBreak {
@@ -1034,13 +1069,19 @@ body::before { content: none; }
 }
 
 .pie-chart:hover .pie-center {
-    border-color: var(--error-red);
+    /* Neutralized hover: no shake/glitch */
+    border-color: var(--accent-green);
     box-shadow: 
-        0 0 50px rgba(255, 0, 85, 0.6),
-        inset 0 0 50px rgba(255, 0, 85, 0.2);
-    transform: translate(-50%, -50%) scale(0.9);
-    animation: centerBreak 1s ease-in-out infinite;
+        0 0 30px rgba(0, 255, 136, 0.4),
+        inset 0 0 30px rgba(0, 255, 136, 0.1);
+    transform: translate(-50%, -50%);
+    animation: none;
+    transition: none;
 }
+
+/* Ensure label stays stable; no hover flicker */
+.pie-chart .pie-error { transition: none; }
+.pie-chart:hover .pie-error { transition: none; }
 
 @keyframes centerBreak {
     0%, 100% { transform: translate(-50%, -50%) scale(0.9) rotate(0deg); }
@@ -1054,6 +1095,7 @@ body::before { content: none; }
     font-size: 1.5rem;
     font-weight: 700;
     animation: pulse 2s infinite;
+    display: none;
 }
 
 .tokenomics-legend {
@@ -1075,17 +1117,18 @@ body::before { content: none; }
         inset 0 0 15px rgba(0, 255, 136, 0.1);
     position: relative;
     overflow: hidden;
-    cursor: pointer;
-    transition: all 0.3s ease;
+    cursor: default;
+    transition: none;
 }
 
 .legend-item:hover {
-    border-color: var(--error-red);
+    /* Neutralized legend hover */
+    border-color: var(--accent-green);
     box-shadow: 
-        0 0 25px rgba(255, 0, 85, 0.5),
-        inset 0 0 25px rgba(255, 0, 85, 0.2);
-    animation: legendBreak 1s ease-in-out infinite;
-    transform: skew(-2deg) scale(1.02);
+        0 0 15px rgba(0, 255, 136, 0.3),
+        inset 0 0 15px rgba(0, 255, 136, 0.1);
+    animation: none;
+    transform: none;
 }
 
 @keyframes legendBreak {
@@ -1108,11 +1151,11 @@ body::before { content: none; }
         rgba(0, 255, 136, 0.3),
         transparent
     );
-    animation: legendSweep 3s linear infinite;
+    animation: none;
 }
 
 .legend-item:hover::after {
-    animation: legendSweep 1s linear infinite, legendSweepBreak 0.5s ease-in-out infinite;
+    animation: none;
 }
 
 @keyframes legendSweepBreak {
@@ -1125,13 +1168,13 @@ body::before { content: none; }
     height: 24px;
     border-radius: 4px;
     box-shadow: 0 0 15px currentColor;
-    animation: colorPulse 2s ease-in-out infinite;
-    transition: all 0.3s ease;
+    animation: none;
+    transition: none;
 }
 
 .legend-item:hover .legend-color {
-    box-shadow: 0 0 25px currentColor, 0 0 50px currentColor;
-    animation: colorBreak 0.3s ease-in-out infinite;
+    box-shadow: 0 0 15px currentColor;
+    animation: none;
 }
 
 @keyframes colorBreak {

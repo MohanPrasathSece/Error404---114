@@ -584,7 +584,7 @@ function openWhitepaper() {
 // Top-right actions
 function openTwitter() {
     try {
-        window.open('https://twitter.com', '_blank');
+        window.open('https://x.com/lostin404', '_blank');
     } catch (e) {
         showPopup('> Unable to open Twitter');
     }
@@ -665,11 +665,17 @@ if (!reduceMotion) {
 const socialLinks = document.querySelectorAll('.social-link');
 socialLinks.forEach(link => {
     link.addEventListener('click', (e) => {
+        if (link.dataset.real === 'true') {
+            // allow real external link to proceed
+            return;
+        }
         e.preventDefault();
         const errorMsg = link.getAttribute('data-error');
         showPopup(`> Attempting to connect...<br>> ${errorMsg}<br>> Connection failed<br>> Please try again never`);
     });
 });
+
+// Tokenomics wheel: no click or hover error
 
 // Cursor Flicker Effect
 function flickerCursor() {
