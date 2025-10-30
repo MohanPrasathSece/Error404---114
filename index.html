@@ -8,8 +8,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="images/404-logo.png">
 </head>
 <body>
+    <div class="top-right-actions">
+        <button class="btn btn-primary" onclick="buyToken()">Buy $404</button>
+        <button class="btn btn-secondary" onclick="openTwitter()">Twitter</button>
+    </div>
     <!-- Matrix Rain Background -->
     <canvas id="matrix-rain"></canvas>
     
@@ -29,62 +34,85 @@
     <!-- Hero Section -->
     <section class="hero">
         <div class="logo-container">
+            <img class="site-logo" src="images/404-logo.png" alt="$404 logo">
             <h1 class="logo glitch" data-text="$404">$404</h1>
             <p class="subtitle">utility not found<span class="cursor">_</span></p>
             <p class="error-msg">&gt; An error occurred while finding purpose.</p>
         </div>
         
         <div class="button-group">
-            <button class="btn btn-primary" onclick="buyToken()">Buy $404</button>
-            <button class="btn btn-secondary" onclick="retryLoad()">Retry</button>
+            <button class="btn btn-secondary" onclick="scrollDown()">Scroll Down</button>
         </div>
     </section>
 
-    <!-- Roadmap / Progress -->
-    <section class="roadmap" id="roadmap">
-        <div class="roadmap-container">
-            <div class="roadmap-item" data-key="utility">
-                <span class="roadmap-status">[ ]</span>
-                <span class="roadmap-text">Unlock Utility (Terminal Hunt)</span>
-            </div>
-            <div class="roadmap-item" data-key="tokenomics">
-                <span class="roadmap-status">[ ]</span>
-                <span class="roadmap-text">Unlock Tokenomics (Memory Match)</span>
-            </div>
-            <div class="roadmap-item" data-key="team">
-                <span class="roadmap-status">[ ]</span>
-                <span class="roadmap-text">Unlock Team (Defeat Boss or 300 Score)</span>
-            </div>
-            <div class="roadmap-item" data-key="reward">
-                <span class="roadmap-status">[ ]</span>
-                <span class="roadmap-text">Claim Reward</span>
-            </div>
-        </div>
-    </section>
+    
 
-    <!-- Puzzle Game Section -->
-    <section class="puzzle" id="puzzle">
-        <h2 class="section-title">PUZZLE: CIRCUIT UNLOCK</h2>
-        <p class="section-subtitle">> Toggle nodes to route the signal. Solve to unlock access.</p>
 
-        <div class="puzzle-container">
-            <div class="puzzle-header">
-                <div class="game-stat">
-                    <span class="stat-label">MOVES:</span>
-                    <span id="puzzleMoves" class="stat-value">0</span>
+    <!-- Games Section: side-by-side -->
+    <section class="games">
+        <div class="games-grid">
+            <section class="puzzle" id="puzzle">
+                <h2 class="section-title">PUZZLE: CIRCUIT UNLOCK</h2>
+                <p class="section-subtitle">&gt; Toggle nodes to route the signal. Solve to unlock access.</p>
+
+                <div class="puzzle-container">
+                    <div class="puzzle-header">
+                        <div class="game-stat">
+                            <span class="stat-label">MOVES:</span>
+                            <span id="puzzleMoves" class="stat-value">0</span>
+                        </div>
+                        <div class="game-stat">
+                            <span class="stat-label">STATUS:</span>
+                            <span id="puzzleStatus" class="stat-value">INCOMPLETE</span>
+                        </div>
+                    </div>
+
+                    <div class="puzzle-grid" id="puzzleGrid" aria-label="Puzzle grid" role="grid"></div>
+
+                    <div class="puzzle-controls">
+                        <button class="btn btn-primary" id="puzzleNew">NEW PUZZLE</button>
+                        <button class="btn btn-secondary" id="puzzleReset">RESET</button>
+                    </div>
                 </div>
-                <div class="game-stat">
-                    <span class="stat-label">STATUS:</span>
-                    <span id="puzzleStatus" class="stat-value">INCOMPLETE</span>
+            </section>
+
+            <section class="mini-game">
+                <h2 class="section-title">MINI GAME: SYSTEM COLLAPSE</h2>
+                <p class="section-subtitle">&gt; Catch the falling errors before the system crashes</p>
+                
+                <div class="game-container">
+                    <div class="game-header">
+                        <div class="game-stat">
+                            <span class="stat-label">ERRORS CAUGHT:</span>
+                            <span id="score" class="stat-value">0</span>
+                        </div>
+                        <div class="game-stat">
+                            <span class="stat-label">SYSTEM HEALTH:</span>
+                            <span id="health" class="stat-value">100%</span>
+                        </div>
+                        <div class="game-stat">
+                            <span class="stat-label">STATUS:</span>
+                            <span id="status" class="stat-value">RUNNING</span>
+                        </div>
+                    </div>
+                    
+                    <div class="game-area" id="gameArea">
+                        <div class="player" id="player">
+                            <span class="player-symbol">&gt;_</span>
+                        </div>
+                        <div class="game-instructions" id="instructions">
+                            <p>Use A/D or ←/→ to move</p>
+                            <p>Catch falling errors to prevent system collapse</p>
+                            <p>Press SPACE to start</p>
+                        </div>
+                    </div>
+                    
+                    <div class="game-controls">
+                        <button class="btn btn-primary" onclick="startGame()">START SYSTEM</button>
+                        <button class="btn btn-secondary" onclick="resetGame()">REBOOT</button>
+                    </div>
                 </div>
-            </div>
-
-            <div class="puzzle-grid" id="puzzleGrid" aria-label="Puzzle grid" role="grid"></div>
-
-            <div class="puzzle-controls">
-                <button class="btn btn-primary" id="puzzleNew">NEW PUZZLE</button>
-                <button class="btn btn-secondary" id="puzzleReset">RESET</button>
-            </div>
+            </section>
         </div>
     </section>
 
@@ -124,9 +152,6 @@
         </div>
 
         <button class="btn btn-broken" onclick="openWhitepaper()">Access Whitepaper</button>
-        <div class="section-lock" data-section="utility">
-            <div class="lock-msg">LOCKED — Find and click the hidden key token in the Terminal: [KEY-UTIL]</div>
-        </div>
     </section>
 
     <!-- Tokenomics Section -->
@@ -174,71 +199,43 @@
         <div class="team-grid">
             <div class="team-card">
                 <div class="team-image hacker dp-a">
-                    <img src="https://api.dicebear.com/7.x/adventurer/png?seed=404alpha&backgroundColor=transparent&size=200" alt="Team member avatar alpha">
+                    <img src="https://api.dicebear.com/7.x/adventurer/png?seed=ash&backgroundColor=transparent&size=200" alt="ash avatar">
                 </div>
-                <div class="team-name">[REDACTED]</div>
-                <div class="team-role">Role: Unknown</div>
-                <div class="team-bio">Bio: Failed to load.</div>
+                <div class="team-name">ash // 0x4A7F</div>
+                <div class="team-role">Core Developer</div>
+                <div class="team-bio">Bio: —</div>
             </div>
 
             <div class="team-card">
                 <div class="team-image hacker dp-b">
-                    <img src="https://api.dicebear.com/7.x/bottts/png?seed=404beta&backgroundColor=transparent&size=200" alt="Team member avatar beta">
+                    <img src="https://api.dicebear.com/7.x/bottts/png?seed=miraglitch&backgroundColor=transparent&size=200" alt="mira.glitch avatar">
                 </div>
-                <div class="team-name">[REDACTED]</div>
-                <div class="team-role">Role: Unknown</div>
-                <div class="team-bio">Bio: Failed to load.</div>
+                <div class="team-name">mira.glitch</div>
+                <div class="team-role">Creative Director</div>
+                <div class="team-bio">Bio: —</div>
             </div>
 
             <div class="team-card">
                 <div class="team-image hacker dp-c">
-                    <img src="https://api.dicebear.com/7.x/shapes/png?seed=404gamma&backgroundColor=transparent&size=200" alt="Team member avatar gamma">
+                    <img src="https://api.dicebear.com/7.x/shapes/png?seed=nullek&backgroundColor=transparent&size=200" alt="null_ek avatar">
                 </div>
-                <div class="team-name">[REDACTED]</div>
-                <div class="team-role">Role: Unknown</div>
-                <div class="team-bio">Bio: Failed to load.</div>
+                <div class="team-name">null_ek</div>
+                <div class="team-role">Systems / DevOps</div>
+                <div class="team-bio">Bio: —</div>
+            </div>
+
+            <div class="team-card">
+                <div class="team-image hacker dp-d">
+                    <img src="https://api.dicebear.com/7.x/adventurer/png?seed=proxyecho&backgroundColor=transparent&size=200" alt="proxy•echo avatar">
+                </div>
+                <div class="team-name">proxy•echo</div>
+                <div class="team-role">Community Manager</div>
+                <div class="team-bio">Bio: —</div>
             </div>
         </div>
     </section>
 
-    <!-- 404 Mini Game Section -->
-    <section class="mini-game">
-        <h2 class="section-title">MINI GAME: SYSTEM COLLAPSE</h2>
-        <p class="section-subtitle">&gt; Catch the falling errors before the system crashes</p>
-        
-        <div class="game-container">
-            <div class="game-header">
-                <div class="game-stat">
-                    <span class="stat-label">ERRORS CAUGHT:</span>
-                    <span id="score" class="stat-value">0</span>
-                </div>
-                <div class="game-stat">
-                    <span class="stat-label">SYSTEM HEALTH:</span>
-                    <span id="health" class="stat-value">100%</span>
-                </div>
-                <div class="game-stat">
-                    <span class="stat-label">STATUS:</span>
-                    <span id="status" class="stat-value">RUNNING</span>
-                </div>
-            </div>
-            
-            <div class="game-area" id="gameArea">
-                <div class="player" id="player">
-                    <span class="player-symbol">&gt;_</span>
-                </div>
-                <div class="game-instructions" id="instructions">
-                    <p>Use A/D or ←/→ to move</p>
-                    <p>Catch falling errors to prevent system collapse</p>
-                    <p>Press SPACE to start</p>
-                </div>
-            </div>
-            
-            <div class="game-controls">
-                <button class="btn btn-primary" onclick="startGame()">START SYSTEM</button>
-                <button class="btn btn-secondary" onclick="resetGame()">REBOOT</button>
-            </div>
-        </div>
-    </section>
+
 
     <!-- Footer -->
     <footer class="footer">

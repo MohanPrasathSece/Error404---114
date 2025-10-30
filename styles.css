@@ -5,6 +5,83 @@
     box-sizing: border-box;
 }
 
+.top-right-actions {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    display: flex;
+    gap: 0.5rem;
+    z-index: 5;
+}
+
+/* Signal Routing Puzzle */
+.route-puzzle {
+    padding: 4rem 2rem;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+}
+
+.route-grid {
+    --size: 6; /* columns */
+    display: grid;
+    grid-template-columns: repeat(var(--size), 56px);
+    grid-auto-rows: 56px;
+    gap: 8px;
+    width: fit-content;
+    margin: 0 auto 1.5rem;
+}
+
+.route-cell {
+    width: 56px;
+    height: 56px;
+    border: 2px solid var(--accent-green);
+    border-radius: 8px;
+    background: rgba(0,0,0,0.35);
+    box-shadow: 0 0 12px rgba(0,255,136,0.25), inset 0 0 10px rgba(0,255,136,0.08);
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.08s ease, box-shadow 0.2s ease;
+}
+
+.route-cell:hover { transform: translateY(-2px); }
+.route-cell.start { border-color: #00aaff; box-shadow: 0 0 14px rgba(0,170,255,0.5); }
+.route-cell.goal  { border-color: var(--accent-yellow); box-shadow: 0 0 14px rgba(255,170,0,0.5); }
+
+/* connection lines using pseudo element */
+.route-cell::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    display: block;
+    background:
+      /* vertical */
+      linear-gradient(to bottom, transparent calc(50% - 2px), var(--accent-green) calc(50% - 2px), var(--accent-green) calc(50% + 2px), transparent calc(50% + 2px)),
+      /* horizontal */
+      linear-gradient(to right, transparent calc(50% - 2px), var(--accent-green) calc(50% - 2px), var(--accent-green) calc(50% + 2px), transparent calc(50% + 2px));
+    opacity: 0.9;
+    filter: drop-shadow(0 0 6px rgba(0,255,136,0.8));
+    mask:
+      /* vertical off by default */
+      linear-gradient(#000 0 0) center/0 100% no-repeat,
+      /* horizontal off by default */
+      linear-gradient(#000 0 0) center/100% 0 no-repeat;
+}
+
+/* toggle masks through classes for connections */
+.conn-u::after { mask: linear-gradient(#000 0 0) center/4px 100% no-repeat, linear-gradient(#000 0 0) center/0 0 no-repeat; }
+.conn-d::after { mask: linear-gradient(#000 0 0) center/4px 100% no-repeat, linear-gradient(#000 0 0) center/0 0 no-repeat; }
+.conn-l::after { mask: linear-gradient(#000 0 0) center/0 0 no-repeat, linear-gradient(#000 0 0) center/100% 4px no-repeat; }
+.conn-r::after { mask: linear-gradient(#000 0 0) center/0 0 no-repeat, linear-gradient(#000 0 0) center/100% 4px no-repeat; }
+
+/* active path highlighting */
+.route-cell.active {
+    box-shadow: 0 0 22px rgba(0,255,136,0.7), inset 0 0 16px rgba(0,255,136,0.2);
+}
+
+.route-solved .route-grid { filter: none; }
+.route-solved .route-cell { border-color: var(--accent-yellow); }
+
 /* Roadmap / Progress */
 .roadmap {
     padding: 2rem;
@@ -695,6 +772,36 @@ body::before { content: none; }
     margin-bottom: 3rem;
 }
 
+/* Games: side-by-side layout */
+.games {
+    padding: 4rem 2rem;
+    position: relative;
+    z-index: 2;
+}
+
+.games-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2rem;
+    align-items: start;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+@media (max-width: 900px) {
+    .games-grid { grid-template-columns: 1fr; }
+}
+
+/* Visible logo image */
+.site-logo {
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
+    margin: 0 auto 1rem;
+    display: block;
+    filter: drop-shadow(0 0 10px rgba(0,255,136,0.5));
+}
+
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -1069,11 +1176,14 @@ body::before { content: none; }
 }
 
 .team-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    display: flex;
+    justify-content: center;
     gap: 2rem;
     max-width: 1000px;
     margin: 0 auto;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 1rem;
 }
 
 .team-card {
@@ -2225,4 +2335,49 @@ body::before { content: none; }
     50% { transform: rotate(180deg) scale(0.9); }
     75% { transform: rotate(270deg) scale(1.05); }
     100% { transform: rotate(360deg) scale(1); }
+}
+
+/* Hacking-themed Animations */
+@keyframes typing {
+    0% { opacity: 1; }
+    50% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+@keyframes codeGlitch {
+    0%, 90%, 100% { opacity: 1; transform: translate(0); color: var(--accent-green); }
+    91% { opacity: 0.8; transform: translate(-1px, 1px); color: var(--accent-red); }
+    92% { opacity: 0.9; transform: translate(1px, -1px); color: var(--accent-violet); }
+    93% { opacity: 1; transform: translate(0); color: var(--accent-green); }
+}
+
+@keyframes hackingBurst {
+    0% { transform: scale(1) rotate(0deg); opacity: 1; }
+    50% { transform: scale(1.5) rotate(180deg); opacity: 0.7; }
+    100% { transform: scale(1) rotate(360deg); opacity: 1; }
+}
+
+@keyframes matrixTyping {
+    0% { background-position: 0 0; }
+    100% { background-position: 0 100%; }
+}
+
+.hacking-code {
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--accent-green);
+    animation: codeGlitch 3s infinite;
+}
+
+.hacking-burst {
+    animation: hackingBurst 0.6s ease-out;
+}
+
+.landing-typing {
+    position: relative;
+}
+
+.landing-typing::after {
+    content: '_';
+    animation: typing 1s infinite;
+    color: var(--accent-green);
 }

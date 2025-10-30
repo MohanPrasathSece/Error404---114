@@ -13,6 +13,234 @@ function resizeMatrixCanvas() {
     initMatrix();
 }
 
+// === PUZZLE 3: SIGNAL ROUTING (rotate tiles to connect START->GOAL) ===
+let route = {
+    size: 6,
+    grid: [], // 2D of tiles {type, rot, conns: {u,d,l,r}, el}
+    start: { r: 0, c: 0 },
+    goal: { r: 0, c: 0 },
+    moves: 0,
+    gridEl: null,
+    movesEl: null,
+    statusEl: null,
+    containerEl: null,
+};
+
+const TILE_TYPES = [
+    { key: 'straight', base: { u: true, d: true, l: false, r: false } },
+    { key: 'straight', base: { u: true, d: true, l: false, r: false } }, // weight straight 2x
+    { key: 'elbow',   base: { u: true, r: true, d: false, l: false } },
+    { key: 'elbow',   base: { u: true, r: true, d: false, l: false } }, // weight elbow 2x
+    { key: 'tee',     base: { u: true, l: true, r: true, d: false } },
+    { key: 'cross',   base: { u: true, d: true, l: true, r: true } },
+];
+
+function rotConns(base, rot) {
+    // rot: 0,1,2,3 (clockwise 90deg steps)
+    const map = [ 'u','r','d','l' ];
+    const idx = { u:0, r:1, d:2, l:3 };
+    const out = { u:false, r:false, d:false, l:false };
+    for (const dir of ['u','r','d','l']) {
+        if (base[dir]) {
+            const newIdx = (idx[dir] + rot) % 4;
+            out[ map[newIdx] ] = true;
+        }
+    }
+    return out;
+}
+
+function placeTile(r, c, typeKey, rot) {
+    const t = TILE_TYPES.find(t => t.key === typeKey) || TILE_TYPES[0];
+    return { type: typeKey, rot: rot|0, conns: rotConns(t.base, rot|0), el: null, r, c };
+}
+
+function carvePath(size, start, goal) {
+    // random path from start to goal biased to the right
+    const path = [ { ...start } ];
+    let { r, c } = start;
+    while (r !== goal.r || c !== goal.c) {
+        const choices = [];
+        if (c < goal.c) choices.push('r','r'); // bias right
+        if (r < goal.r) choices.push('d');
+        if (r > goal.r) choices.push('u');
+        // add some randomness
+        choices.push('r','u','d');
+        const dir = choices[Math.floor(Math.random()*choices.length)];
+        let nr = r, nc = c;
+        if (dir === 'r' && c+1 < size) nc++;
+        else if (dir === 'u' && r-1 >= 0) nr--;
+        else if (dir === 'd' && r+1 < size) nr++;
+        else if (dir === 'l' && c-1 >= 0) nc--; // rarely used
+        if (nr === r && nc === c) continue;
+        r = nr; c = nc;
+        if (!path.find(p => p.r===r && p.c===c)) path.push({ r, c });
+    }
+    return path;
+}
+
+function tileForStep(prev, curr, next) {
+    // create a tile that connects prev->curr->next
+    const dx1 = Math.sign(curr.c - prev.c);
+    const dy1 = Math.sign(curr.r - prev.r);
+    const dx2 = Math.sign((next?.c ?? curr.c) - curr.c);
+    const dy2 = Math.sign((next?.r ?? curr.r) - curr.r);
+    const need = new Set();
+    if (dx1===0 && dy1<0) need.add('u');
+    if (dx1===0 && dy1>0) need.add('d');
+    if (dx1<0 && dy1===0) need.add('l');
+    if (dx1>0 && dy1===0) need.add('r');
+    if (dx2===0 && dy2<0) need.add('u');
+    if (dx2===0 && dy2>0) need.add('d');
+    if (dx2<0 && dy2===0) need.add('l');
+    if (dx2>0 && dy2===0) need.add('r');
+    const needed = Array.from(need);
+    // choose type that supports all needed directions, then find rotation
+    const candidates = ['cross','tee','elbow','straight'];
+    for (const key of candidates) {
+        const base = TILE_TYPES.find(t => t.key===key).base;
+        for (let rot=0; rot<4; rot++) {
+            const cc = rotConns(base, rot);
+            if (needed.every(d => cc[d])) {
+                return placeTile(curr.r, curr.c, key, rot);
+            }
+        }
+    }
+    return placeTile(curr.r, curr.c, 'cross', 0);
+}
+
+function randomTile(r,c) {
+    const t = TILE_TYPES[Math.floor(Math.random()*TILE_TYPES.length)];
+    return placeTile(r,c, t.key, Math.floor(Math.random()*4));
+}
+
+function renderRouteGrid() {
+    const n = route.size;
+    route.gridEl.innerHTML = '';
+    route.gridEl.style.setProperty('--size', String(n));
+    for (let r=0;r<n;r++) {
+        for (let c=0;c<n;c++) {
+            const tile = route.grid[r][c];
+            const el = document.createElement('button');
+            el.type = 'button';
+            el.className = 'route-cell';
+            if (r===route.start.r && c===route.start.c) el.classList.add('start');
+            if (r===route.goal.r && c===route.goal.c) el.classList.add('goal');
+            el.dataset.r = String(r); el.dataset.c = String(c);
+            tile.el = el;
+            el.addEventListener('click', () => {
+                tile.rot = (tile.rot + 1) % 4;
+                const base = TILE_TYPES.find(t => t.key===tile.type).base;
+                tile.conns = rotConns(base, tile.rot);
+                route.moves++;
+                updateRouteUI();
+                checkRoute();
+            });
+            route.gridEl.appendChild(el);
+        }
+    }
+    paintRouteConns();
+}
+
+function paintRouteConns() {
+    const n = route.size;
+    for (let r=0;r<n;r++) {
+        for (let c=0;c<n;c++) {
+            const tile = route.grid[r][c];
+            const el = tile.el;
+            el.classList.remove('conn-u','conn-d','conn-l','conn-r','active');
+            for (const d of ['u','d','l','r']) {
+                if (tile.conns[d]) el.classList.add('conn-'+d);
+            }
+        }
+    }
+}
+
+function neighbors(r,c) {
+    return [
+        { r:r-1, c, d:'u', od:'d' },
+        { r:r+1, c, d:'d', od:'u' },
+        { r, c:c-1, d:'l', od:'r' },
+        { r, c:c+1, d:'r', od:'l' },
+    ];
+}
+
+function checkRoute() {
+    const n = route.size;
+    // clear active marks
+    for (let r=0;r<n;r++) for (let c=0;c<n;c++) route.grid[r][c].el.classList.remove('active');
+    // BFS
+    const q = [];
+    const seen = Array.from({length:n},()=>Array(n).fill(false));
+    q.push(route.start); seen[route.start.r][route.start.c] = true;
+    while (q.length) {
+        const cur = q.shift();
+        const tile = route.grid[cur.r][cur.c];
+        tile.el.classList.add('active');
+        if (cur.r===route.goal.r && cur.c===route.goal.c) {
+            setRouteStatus('POWERED', true);
+            appendTerminal('> SIGNAL ROUTING SOLVED: Network online', false);
+            route.containerEl.classList.add('route-solved');
+            return true;
+        }
+        for (const nb of neighbors(cur.r, cur.c)) {
+            if (nb.r<0||nb.c<0||nb.r>=n||nb.c>=n) continue;
+            if (seen[nb.r][nb.c]) continue;
+            const A = route.grid[cur.r][cur.c].conns;
+            const B = route.grid[nb.r][nb.c].conns;
+            if (A[nb.d] && B[nb.od]) {
+                seen[nb.r][nb.c] = true;
+                q.push({ r: nb.r, c: nb.c });
+            }
+        }
+    }
+    setRouteStatus('INCOMPLETE', false);
+    route.containerEl.classList.remove('route-solved');
+    return false;
+}
+
+function setRouteStatus(text, solved) {
+    if (route.statusEl) {
+        route.statusEl.textContent = text;
+        route.statusEl.style.color = solved ? 'var(--accent-yellow)' : 'var(--text-secondary)';
+    }
+    if (route.movesEl) route.movesEl.textContent = String(route.moves);
+}
+
+function newRouteLayout() {
+    const n = route.size;
+    route.moves = 0;
+    route.containerEl.classList.remove('route-solved');
+    // choose start left edge mid, goal right edge mid
+    route.start = { r: Math.floor(n/2), c: 0 };
+    route.goal  = { r: Math.floor(n/2), c: n-1 };
+    // empty grid random
+    route.grid = Array.from({length:n}, (_,r)=>Array.from({length:n},(_,c)=>randomTile(r,c)));
+    // carve guaranteed path
+    const path = carvePath(n, route.start, route.goal);
+    for (let i=1;i<path.length-1;i++) {
+        const prev = path[i-1], curr = path[i], next = path[i+1];
+        route.grid[curr.r][curr.c] = tileForStep(prev, curr, next);
+    }
+    // ensure start connects towards next
+    if (path.length>1) {
+        route.grid[path[0].r][path[0].c] = tileForStep(path[0], path[0], path[1]);
+        route.grid[path[path.length-1].r][path[path.length-1].c] = tileForStep(path[path.length-2], path[path.length-1], path[path.length-1]);
+    }
+    renderRouteGrid();
+    checkRoute();
+}
+
+function initRoutePuzzle(size=6) {
+    route.size = size;
+    route.gridEl = document.getElementById('routeGrid');
+    route.movesEl = document.getElementById('routeMoves');
+    route.statusEl = document.getElementById('routeStatus');
+    route.containerEl = document.querySelector('#routePuzzle .puzzle-container');
+    const newBtn = document.getElementById('routeNew');
+    if (!route.gridEl || !route.movesEl || !route.statusEl || !route.containerEl) return;
+    newBtn && newBtn.addEventListener('click', newRouteLayout);
+    newRouteLayout();
+}
 // Use canvas for a neon letter rain background with shatter impacts
 const disableMatrix = false; // enable matrix-style background
 canvas.style.display = '';
@@ -123,6 +351,7 @@ function drawMatrix(ts) {
 
 requestAnimationFrame(drawMatrix);
 const reduceMotion = true;
+const disableShatterEffects = true;
 
 // === Aggressive Shatter & Fall Background ===
 let shards = [];
@@ -132,6 +361,7 @@ const SHATTER_INTERVAL = 1000 / SHATTER_FPS;
 let shatterTimer = 0;
 
 function spawnShard(x, y, power = 1) {
+    if (disableShatterEffects) return;
     const ang = Math.random() * Math.PI * 2;
     const speed = (Math.random() * 6 + 4) * power;
     shards.push({
@@ -149,6 +379,7 @@ function spawnShard(x, y, power = 1) {
 }
 
 function triggerShatter(cx, cy, count = 80, power = 1) {
+    if (disableShatterEffects) return;
     for (let i = 0; i < count; i++) {
         const jitterX = cx + (Math.random() * 120 - 60);
         const jitterY = cy + (Math.random() * 60 - 30);
@@ -213,6 +444,7 @@ function drawShatterFall(ts) {
 }
 
 function startShatterFall() {
+    if (disableShatterEffects) return;
     if (!canvas.width || !canvas.height) resizeMatrixCanvas();
     shards = [];
     shatterLast = 0; shatterTimer = 0;
@@ -258,8 +490,10 @@ function typeTerminalMessage() {
         line.textContent = message.text;
         line.classList.add('terminal-newline');
         terminalOutput.appendChild(line);
-        // keep newest visible only if user is near bottom
-        if (shouldAutoScroll(terminalOutput)) {
+        // Auto-scroll rules: always for errors, otherwise only if near bottom
+        if (message.error) {
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        } else if (shouldAutoScroll(terminalOutput)) {
             terminalOutput.scrollTop = terminalOutput.scrollHeight;
         }
         setTimeout(() => line.classList.remove('terminal-newline'), 600);
@@ -303,7 +537,9 @@ function scheduleUtilityKey() {
         });
         line.append('> ', btn, ' — click to claim');
         terminalOutput.appendChild(line);
-        if (shouldAutoScroll(terminalOutput)) terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        if (shouldAutoScroll(terminalOutput)) {
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        }
     }, 2200);
 }
 
@@ -317,6 +553,7 @@ window.addEventListener('load', () => {
     try { playLandingShatter(); } catch (e) { console.error(e); }
     // Initialize memory puzzle game
     try { initMemoryPuzzle(); } catch (e) { console.error(e); }
+    // Signal routing puzzle removed
     // Apply meta-puzzle progress and maybe drop terminal key
     try { loadProgress(); applyLocks(); updateRoadmap(); scheduleUtilityKey(); } catch (e) { console.error(e); }
     // Start aggressive shatter+fall background
@@ -342,6 +579,22 @@ function retryLoad() {
 // Whitepaper Button
 function openWhitepaper() {
     showPopup('> Loading whitepaper.pdf...<br>> Error: File not found (0kb)<br>> Download failed<br>> Reason: File does not exist<br>> Status: Intentionally missing');
+}
+
+// Top-right actions
+function openTwitter() {
+    try {
+        window.open('https://twitter.com', '_blank');
+    } catch (e) {
+        showPopup('> Unable to open Twitter');
+    }
+}
+
+function scrollDown() {
+    const target = document.querySelector('#roadmap') || document.querySelector('section:nth-of-type(2)');
+    if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 }
 
 // Popup Functions
@@ -655,7 +908,9 @@ function appendTerminal(text, isError = false) {
     line.textContent = text;
     line.classList.add('terminal-newline');
     terminalOutput.appendChild(line);
-    if (shouldAutoScroll(terminalOutput)) {
+    if (isError) {
+        terminalOutput.scrollTop = terminalOutput.scrollHeight;
+    } else if (shouldAutoScroll(terminalOutput)) {
         terminalOutput.scrollTop = terminalOutput.scrollHeight;
     }
     setTimeout(() => line.classList.remove('terminal-newline'), 600);
@@ -1164,40 +1419,91 @@ function gameLoop() {
 function playLandingShatter() {
     const overlay = document.querySelector('.glitch-overlay');
     const hero = document.querySelector('.hero');
-    // show glitch overlay briefly
+    
+    // Create typing sequence in hero
+    const typingEl = document.createElement('div');
+    typingEl.className = 'landing-typing';
+    typingEl.style.position = 'absolute';
+    typingEl.style.top = '50%';
+    typingEl.style.left = '50%';
+    typingEl.style.transform = 'translate(-50%, -50%)';
+    typingEl.style.fontSize = '2rem';
+    typingEl.style.color = 'var(--accent-green)';
+    typingEl.style.fontFamily = 'IBM Plex Mono, monospace';
+    typingEl.style.zIndex = '999';
+    typingEl.style.textShadow = '0 0 10px var(--accent-green)';
+    
+    const messages = ['Initializing hack...', 'Loading code...', 'Error: 404 detected', 'Bypassing security...', 'System breach!'];
+    let messageIndex = 0;
+    
+    function typeMessage(msg, callback) {
+        typingEl.textContent = '';
+        let i = 0;
+        const interval = setInterval(() => {
+            typingEl.textContent += msg[i];
+            i++;
+            if (i === msg.length) {
+                clearInterval(interval);
+                setTimeout(callback, 500);
+            }
+        }, 100);
+    }
+    
+    function nextMessage() {
+        if (messageIndex < messages.length) {
+            typeMessage(messages[messageIndex], () => {
+                messageIndex++;
+                setTimeout(nextMessage, 300);
+            });
+        } else {
+            // After typing, trigger burst
+            typingEl.remove();
+            triggerLandingBurst();
+        }
+    }
+    
+    hero.appendChild(typingEl);
+    nextMessage();
+    
+    // Show glitch overlay briefly
     if (overlay) {
         overlay.style.display = 'block';
         overlay.style.position = 'fixed';
         overlay.style.inset = '0';
         overlay.style.zIndex = '9999';
         overlay.style.pointerEvents = 'none';
-        overlay.style.animation = 'glitchOverlay 900ms ease-in-out';
+        overlay.style.animation = 'glitchOverlay 1.5s ease-in-out';
     }
-    // spawn shards from hero center and screen center
-    const bursts = 80;
+    
+    // Screen shake pulses
+    const shakes = 6;
+    for (let i = 0; i < shakes; i++) {
+        setTimeout(() => {
+            document.body.classList.add('shake-burst');
+            setTimeout(() => document.body.classList.remove('shake-burst'), 350);
+        }, 500 + i * 200);
+    }
+    
+    // Hide overlay after
+    setTimeout(() => { if (overlay) overlay.style.display = 'none'; }, 2000);
+}
+
+function triggerLandingBurst() {
+    const bursts = 120;
     const centerX = window.innerWidth / 2;
     const centerY = window.innerHeight / 2;
     let hx = centerX, hy = centerY;
+    const hero = document.querySelector('.hero');
     if (hero) {
         const r = hero.getBoundingClientRect();
         hx = r.left + r.width / 2;
         hy = r.top + r.height / 2;
     }
     for (let i = 0; i < bursts; i++) {
-        const t = i * 8;
-        setTimeout(() => createBreakParticle(hx + (Math.random()*80-40), hy + (Math.random()*40-20)), t);
-        if (i % 3 === 0) setTimeout(() => createBreakParticle(centerX, centerY), t + 4);
+        const t = i * 5;
+        setTimeout(() => createBreakParticle(hx + (Math.random()*100-50), hy + (Math.random()*50-25)), t);
+        if (i % 4 === 0) setTimeout(() => createBreakParticle(centerX, centerY), t + 2);
     }
-    // screen shake pulses
-    const shakes = 4;
-    for (let i = 0; i < shakes; i++) {
-        setTimeout(() => {
-            document.body.classList.add('shake-burst');
-            setTimeout(() => document.body.classList.remove('shake-burst'), 350);
-        }, 120 + i * 160);
-    }
-    // hide overlay
-    setTimeout(() => { if (overlay) overlay.style.display = 'none'; }, 1000);
 }
 
 // Enhanced breaking effects for sections
@@ -1320,33 +1626,31 @@ teamCards.forEach((card, index) => {
     });
 });
 
-// Create breaking particle effect
+// Create breaking particle effect with hacking theme
 function createBreakParticle(x = Math.random() * window.innerWidth, y = Math.random() * window.innerHeight) {
     if (reduceMotion) return;
-    const particle = document.createElement('div');
+    const particle = document.createElement('span');
+    particle.className = 'hacking-code';
     particle.style.position = 'fixed';
     particle.style.left = x + 'px';
     particle.style.top = y + 'px';
-    particle.style.width = Math.random() * 15 + 8 + 'px';
-    particle.style.height = Math.random() * 15 + 8 + 'px';
-    
-    // Make particles look like debris/shards
-    const isRed = Math.random() > 0.5;
-    particle.style.background = isRed ? '#2a2a2a' : '#1a1a1a';
-    particle.style.border = '1px solid ' + (isRed ? '#ff3333' : '#666666');
-    
-    // Random shard-like shapes
-    const shapes = ['polygon(50% 0%, 0% 100%, 100% 100%)', 'polygon(0% 0%, 100% 50%, 0% 100%)', 'polygon(25% 0%, 100% 0%, 75% 100%, 0% 100%)'];
-    particle.style.clipPath = shapes[Math.floor(Math.random() * shapes.length)];
-    
-    particle.style.zIndex = '0';
+    particle.style.fontSize = (Math.random() * 20 + 10) + 'px';
+    particle.style.fontFamily = 'IBM Plex Mono, monospace';
+    particle.style.zIndex = '1000';
     particle.style.pointerEvents = 'none';
-    particle.style.boxShadow = '0 0 8px rgba(255, 51, 51, 0.3)';
-    particle.style.opacity = '0.9';
+    particle.style.userSelect = 'none';
+    
+    // Hacking-themed text: random chars or code snippets
+    const codeSnippets = ['if (error)', '404', 'null', 'crash()', 'hack()', 'bug', 'fix', 'code', 'data', 'loop'];
+    const text = Math.random() > 0.5 ? chars[Math.floor(Math.random() * chars.length)] : codeSnippets[Math.floor(Math.random() * codeSnippets.length)];
+    particle.textContent = text;
     
     document.body.appendChild(particle);
     
-    // Animate breaking particle with gravity
+    // Animate with hacking burst
+    particle.classList.add('hacking-burst');
+    
+    // Gravity and movement
     const angle = Math.random() * Math.PI * 2;
     const speed = Math.random() * 300 + 150;
     const vx = Math.cos(angle) * speed;
@@ -1363,7 +1667,7 @@ function createBreakParticle(x = Math.random() * window.innerWidth, y = Math.ran
         
         particle.style.left = currentX + 'px';
         particle.style.top = currentY + 'px';
-        particle.style.opacity = Math.max(0, parseFloat(particle.style.opacity) - 0.015);
+        particle.style.opacity = Math.max(0, parseFloat(particle.style.opacity || 1) - 0.015);
         particle.style.transform = `scale(${Math.max(0.3, 1 - (currentY - y) / 800)}) rotate(${currentY * 2}deg)`;
         
         if (parseFloat(particle.style.opacity) > 0 && currentY < window.innerHeight + 100) {
