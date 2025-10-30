@@ -1557,48 +1557,11 @@ hoverShakeTargets.forEach(el => {
     });
 });
 
-// Tokenomics hover effects
-if (tokenomicsSection) {
-    tokenomicsSection.addEventListener('mouseenter', () => {
-        if (reduceMotion) return;
-        document.body.style.animation = 'glitchText 0.5s infinite';
-        setTimeout(() => {
-            document.body.style.animation = '';
-        }, 500);
-        for (let i = 0; i < 5; i++) {
-            setTimeout(() => createBreakParticle(), i * 100);
-        }
-    });
-}
+// Tokenomics hover effects - DISABLED
 
-// Pie chart hover effects
-if (pieChart) {
-    pieChart.addEventListener('mouseenter', () => {
-        if (!reduceMotion) {
-            document.body.style.transform = 'translate(' + (Math.random() * 6 - 3) + 'px, ' + (Math.random() * 6 - 3) + 'px)';
-            setTimeout(() => {
-                document.body.style.transform = '';
-            }, 200);
-        }
-        showPopup('> ERROR: Tokenomics data corrupted<br>> Chart integrity compromised<br>> Displaying emergency values');
-    });
-}
+// Pie chart hover effects - DISABLED
 
-// Legend items hover effects
-legendItems.forEach(item => {
-    item.addEventListener('mouseenter', () => {
-        if (!reduceMotion) {
-            item.style.animation = 'legendBreak 0.3s ease-in-out infinite';
-            setTimeout(() => {
-                item.style.animation = '';
-            }, 1000);
-        }
-        if (!reduceMotion) {
-            const rect = item.getBoundingClientRect();
-            createBreakParticle(rect.left + rect.width/2, rect.top + rect.height/2);
-        }
-    });
-});
+// Legend items hover effects - DISABLED
 
 // Team section hover effects (only on hover, not scroll)
 if (teamSection) {

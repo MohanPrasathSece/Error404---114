@@ -429,13 +429,17 @@ body::before { content: none; }
     max-width: min(90vw, 900px);
 }
 
+/* Nudge the hero subtitle lower */
+.hero .subtitle { margin-top: 3rem; }
+
 .hero .error-msg {
     line-height: 1.4;
 }
 
 @media (max-width: 600px) {
     .logo-container { gap: 1.2rem; }
-    .subtitle { margin-top: 1rem; margin-bottom: 0.75rem; }
+    .subtitle { margin-bottom: 0.75rem; }
+    .hero .subtitle { margin-top: 2rem; }
     .hero .error-msg { margin-top: 0.5rem; }
 }
 
@@ -817,7 +821,7 @@ body::before { content: none; }
 
 /* Visible logo image */
 .site-logo {
-    width: clamp(160px, 28vw, 280px);
+    width: clamp(180px, 30vw, 360px);
     height: auto;
     object-fit: contain;
     margin: 0 auto 1rem;
@@ -827,7 +831,7 @@ body::before { content: none; }
 
 .glitch-img {
     position: relative;
-    animation: imgGlitch 2.8s infinite;
+    animation: imgGlitch 2.8s infinite, logoBlink 5s linear infinite;
 }
 
 @keyframes imgGlitch {
@@ -836,6 +840,13 @@ body::before { content: none; }
     91% { transform: translate(2px, -2px) skewX(-1deg); filter: hue-rotate(-20deg) saturate(1.2); }
     92% { transform: translate(-1px, 1px); filter: contrast(1.1) brightness(1.05); }
     93% { transform: translate(0); filter: none; }
+}
+
+/* Brief blink every 5s */
+@keyframes logoBlink {
+    0%, 96% { opacity: 1; }
+    97% { opacity: 0; }
+    98%, 100% { opacity: 1; }
 }
 
 .stats-grid {
