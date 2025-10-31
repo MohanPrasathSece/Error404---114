@@ -353,6 +353,38 @@ requestAnimationFrame(drawMatrix);
 const reduceMotion = true;
 const disableShatterEffects = true;
 
+// Toggle background animations only while any shake animation runs
+let __activeShakeAnimations = 0;
+function __updateBodyShakingClass() {
+    const body = document.body;
+    if (__activeShakeAnimations > 0) body.classList.add('shaking');
+    else body.classList.remove('shaking');
+}
+
+function __onAnimStart(e) {
+    try {
+        if (!e || !e.animationName) return;
+        if (/shake/i.test(e.animationName)) {
+            __activeShakeAnimations++;
+            __updateBodyShakingClass();
+        }
+    } catch (_) {}
+}
+
+function __onAnimEnd(e) {
+    try {
+        if (!e || !e.animationName) return;
+        if (/shake/i.test(e.animationName)) {
+            __activeShakeAnimations = Math.max(0, __activeShakeAnimations - 1);
+            __updateBodyShakingClass();
+        }
+    } catch (_) {}
+}
+
+document.addEventListener('animationstart', __onAnimStart, true);
+document.addEventListener('animationend', __onAnimEnd, true);
+document.addEventListener('animationcancel', __onAnimEnd, true);
+
 // === Aggressive Shatter & Fall Background ===
 let shards = [];
 let shatterLast = 0;
