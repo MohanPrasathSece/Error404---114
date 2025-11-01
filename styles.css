@@ -1452,48 +1452,11 @@ body::before { content: none; }
     overflow: hidden;
 }
 
-.team-image.hacker::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: repeating-linear-gradient(0deg, rgba(0,255,136,0.08) 0 2px, transparent 2px 4px);
-    pointer-events: none;
-    mix-blend-mode: lighten;
-    opacity: 0.25;
-}
-
-.team-image.hacker img {
-    filter: hue-rotate(110deg) saturate(1.2) contrast(1.05);
-}
-
-.team-image.hacker.dp-a img {
-    -webkit-mask-image: linear-gradient(90deg, transparent 0 45%, black 55% 100%);
-            mask-image: linear-gradient(90deg, transparent 0 45%, black 55% 100%);
-}
-
-.team-image.hacker.dp-b img {
-    -webkit-mask-image: linear-gradient(135deg, transparent 0 50%, black 60% 100%);
-            mask-image: linear-gradient(135deg, transparent 0 50%, black 60% 100%);
-}
-
-.team-image.hacker.dp-c img {
-    -webkit-mask-image: linear-gradient(0deg, transparent 0 40%, black 55% 100%);
-            mask-image: linear-gradient(0deg, transparent 0 40%, black 55% 100%);
-}
-
-.team-card:hover .team-image.hacker img {
-    transform: translateX(1px);
-}
-
 .team-card:hover .team-image {
     border-color: var(--error-red);
     box-shadow: 
         0 0 40px rgba(255, 0, 85, 0.5),
         inset 0 0 30px rgba(255, 0, 85, 0.25);
-    clip-path: polygon(
-        20% 0%, 80% 0%, 100% 35%, 90% 80%, 60% 100%, 35% 95%, 0% 70%, 5% 20%
-    );
-    filter: contrast(1.6) brightness(0.7) grayscale(0.3);
 }
 
 @keyframes imageShatter {
