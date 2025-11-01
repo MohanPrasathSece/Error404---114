@@ -2248,6 +2248,212 @@ body::before { content: none; }
     }
 }
 
+/* Extra small devices */
+@media (max-width: 600px) {
+  .top-right-actions {
+    gap: 0.4rem;
+  }
+  .btn {
+    padding: 0.7rem 1.4rem;
+    font-size: 0.95rem;
+  }
+  .games,
+  .utility,
+  .tokenomics,
+  .team {
+    padding: 3rem 1.25rem;
+  }
+  .team-grid {
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+  .team-card {
+    padding: 1.75rem;
+  }
+  .game-area {
+    height: 260px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero {
+    padding: 1.5rem 1rem;
+    min-height: 100dvh;
+  }
+  .top-right-actions {
+    top: auto;
+    bottom: max(12px, env(safe-area-inset-bottom));
+    right: 50%;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .btn {
+    padding: 0.6rem 1.1rem;
+    font-size: 0.9rem;
+  }
+  .tokenomics-container { gap: 1.5rem; }
+  .pie-chart { width: 240px; height: 240px; }
+  .pie-center { width: 110px; height: 110px; }
+  .team-grid {
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+  }
+  .team-card { width: 100%; max-width: 360px; }
+  .team-image { width: 120px; height: 120px; }
+  .game-area { height: 230px; }
+}
+
+@media (max-width: 380px) {
+  .btn { padding: 0.55rem 1rem; font-size: 0.85rem; }
+  .team-card { padding: 1.5rem; }
+}
+
+/* Ultra-compact tuning for small phones */
+@media (max-width: 480px) {
+  /* Keep actions at top-right if bottom placement feels cramped */
+  .top-right-actions {
+    top: 12px;
+    bottom: auto;
+    left: auto;
+    right: 12px;
+    transform: none;
+    gap: 0.35rem;
+  }
+
+  /* Typography and headings */
+  .section-title { font-size: clamp(1.5rem, 6vw, 1.9rem); margin-bottom: 0.6rem; }
+  .section-subtitle { font-size: 0.85rem; margin-bottom: 1.25rem; }
+  .stat-value { font-size: 1.6rem; }
+
+  /* Hero/logo spacing */
+  .site-logo { width: min(55vw, 260px); }
+  .logo-container { gap: 0.8rem; }
+  .hero .subtitle { margin-top: 1.25rem; }
+  .hero .error-msg { margin-top: 0.25rem; }
+
+  /* Containers and cards */
+  .game-container,
+  .puzzle-container { padding: 1.25rem; }
+  .team-card { padding: 1.25rem; }
+  .stats-grid { gap: 1rem; }
+  .legend-item { padding: 0.85rem; }
+
+  /* Grids and gaps */
+  .games { padding-top: 2.5rem; }
+  .games-grid { gap: 1.25rem; }
+  .stats-grid { grid-template-columns: 1fr; }
+  .tokenomics-legend { grid-template-columns: 1fr; gap: 0.75rem; }
+
+  /* Puzzle sizes */
+  .puzzle-grid { max-width: 320px; gap: 8px; }
+  .puzzle-cell { border-width: 1.5px; }
+
+  /* Mini-game area */
+  .game-area { height: 220px; }
+
+  /* Team layout */
+  .team-grid { gap: 1rem; }
+  .team-image { width: 108px; height: 108px; }
+  .team-name { font-size: 1.1rem; }
+  .team-role { font-size: 0.95rem; }
+  .team-bio { font-size: 0.85rem; }
+
+  /* Tokenomics chart */
+  .pie-chart { width: 220px; height: 220px; }
+  .pie-center { width: 100px; height: 100px; }
+
+  /* Buttons */
+  .btn { padding: 0.55rem 1rem; font-size: 0.85rem; }
+
+  /* Footer spacing */
+  .footer { padding: 2.5rem 1rem 1.25rem; }
+  .social-links { margin-bottom: 1.25rem; gap: 0.75rem; }
+  .footer-text { margin-top: 1.25rem; }
+  
+  /* Box size reductions */
+  .puzzle-container,
+  .game-container,
+  .stat-card,
+  .team-card,
+  .legend-item,
+  .popup-content {
+    padding: 1rem;
+  }
+  
+  /* Thinner borders for boxes */
+  .puzzle-container,
+  .game-container,
+  .terminal-window,
+  .game-area,
+  .stat-card,
+  .team-card,
+  .legend-item,
+  .popup-content {
+    border-width: 1px;
+  }
+  
+  /* Terminal and popup internals */
+  .terminal-body { padding: 1rem; min-height: 240px; }
+  .popup-body { padding: 1.25rem; }
+  .popup-content { max-width: 420px; width: 92%; }
+  
+  /* Tighter gaps */
+  .team-grid { gap: 0.75rem; }
+  .games-grid { gap: 1rem; }
+  .stats-grid { gap: 0.75rem; }
+}
+
+/* Progressive compact scaling */
+@media (max-width: 400px) {
+  .games, .utility, .tokenomics, .team { padding: 2.25rem 1rem; }
+  .puzzle-container,
+  .game-container,
+  .stat-card,
+  .team-card,
+  .legend-item,
+  .popup-content { padding: 0.9rem; }
+  .game-area { height: 200px; }
+  .pie-chart { width: 200px; height: 200px; }
+  .pie-center { width: 90px; height: 90px; }
+  .team-image { width: 100px; height: 100px; }
+  .btn { padding: 0.5rem 0.9rem; font-size: 0.82rem; }
+  .section-title { font-size: clamp(1.4rem, 6vw, 1.75rem); }
+}
+
+@media (max-width: 360px) {
+  .games, .utility, .tokenomics, .team { padding: 2rem 0.9rem; }
+  .puzzle-container,
+  .game-container,
+  .stat-card,
+  .team-card,
+  .legend-item,
+  .popup-content { padding: 0.8rem; }
+  .game-area { height: 190px; }
+  .pie-chart { width: 180px; height: 180px; }
+  .pie-center { width: 80px; height: 80px; }
+  .team-image { width: 92px; height: 92px; }
+  .puzzle-grid { max-width: 300px; gap: 7px; }
+  .terminal-body { min-height: 220px; }
+  .btn { padding: 0.48rem 0.85rem; font-size: 0.8rem; }
+}
+
+@media (max-width: 320px) {
+  .games, .utility, .tokenomics, .team { padding: 1.75rem 0.8rem; }
+  .puzzle-container,
+  .game-container,
+  .stat-card,
+  .team-card,
+  .legend-item,
+  .popup-content { padding: 0.7rem; }
+  .game-area { height: 180px; }
+  .pie-chart { width: 160px; height: 160px; }
+  .pie-center { width: 72px; height: 72px; }
+  .team-image { width: 84px; height: 84px; }
+  .btn { padding: 0.45rem 0.8rem; font-size: 0.78rem; }
+  .social-links { gap: 0.6rem; }
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
     width: 10px;

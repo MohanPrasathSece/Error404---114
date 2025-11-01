@@ -1045,6 +1045,29 @@ function initializeGameElements() {
     
     // Set initial status
     if (statusEl) statusEl.textContent = 'READY';
+    addTouchControls();
+}
+
+function addTouchControls() {
+    if (!gameArea || !player) return;
+    const setByX = (clientX) => {
+        const rect = gameArea.getBoundingClientRect();
+        let x = (clientX - rect.left) / rect.width;
+        x = Math.max(0, Math.min(1, x));
+        gameState.playerPos = x * 100;
+        player.style.left = gameState.playerPos + '%';
+    };
+    gameArea.addEventListener('touchstart', (e) => {
+        const t = e.touches[0];
+        if (t) setByX(t.clientX);
+        if (!gameState.running) startGame();
+        e.preventDefault();
+    }, { passive: false });
+    gameArea.addEventListener('touchmove', (e) => {
+        const t = e.touches[0];
+        if (t) setByX(t.clientX);
+        e.preventDefault();
+    }, { passive: false });
 }
 
 // Game controls
